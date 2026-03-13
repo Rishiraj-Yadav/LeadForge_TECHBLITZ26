@@ -1,0 +1,22 @@
+TechBlitz26 - Problem Statement
+Team: yadav's
+Domain: agenticai
+Sales and Outreach
+Challenge Statement
+Small and mid-size businesses lose leads every day not because their product is wrong but
+because nobody responded in time, nobody followed up, and nobody had a system to make
+either of those things happen automatically. Leads arrive through website forms, Instagram ads,
+and WhatsApp messages while the rep is busy, and by the time someone gets back to them the
+prospect has already moved on. Even when first contact happens, follow-up is inconsistent and
+entirely dependent on the rep remembering to try again, which they rarely do beyond one
+attempt. CRMs go unmaintained, email sequences feel robotic, and the business owner has zero
+visibility into pipeline health without physically interrogating the team. The result is a leaking
+pipeline where money is being lost silently every single day.
+Requirements
+Build an intelligent agent that captures leads from any source, automatically researches and
+scores them, and notifies the sales rep through WhatsApp or Telegram with a simple approve or
+reject decision. Once approved, the agent must handle outreach and follow-up across
+messaging, email, and voice calls without manual prompting, while updating the rep only at key
+decision points. Ensure communication feels personalized, pipeline activity is logged
+automatically, and the full system can be controlled from a phone without opening a laptop or
+dashboard.
