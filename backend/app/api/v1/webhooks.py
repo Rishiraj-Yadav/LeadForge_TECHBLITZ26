@@ -21,28 +21,24 @@ settings = get_settings()
 
 
 async def _find_business_by_code(code: str) -> Business | None:
-    return await Business.find_one(Business.deep_link_code == code)
+    return await Business.find_one({"deep_link_code": code})
 
 
 async def _find_business_by_rep_chat(chat_id: str) -> Business | None:
     """Check if a chat_id belongs to any business owner."""
-    return await Business.find_one(Business.telegram_chat_id == str(chat_id))
+    return await Business.find_one({"telegram_chat_id": str(chat_id)})
 
 
 async def _resolve_business_for_customer(chat_id: str) -> Business | None:
     """Find the business a customer is associated with via their existing lead."""
+    # Use raw MongoDB query — Beanie has no .not_in() on ExpressionField
     lead = await Lead.find_one(
-        Lead.source == "telegram",
-        Lead.details.telegram_chat_id == str(chat_id),  # noqa — dot-notation for nested dict
-        Lead.stage.not_in([LeadStage.WON, LeadStage.LOST]),
+        {
+            "source": "telegram",
+            "details.telegram_chat_id": str(chat_id),
+            "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
+        }
     )
-    if not lead:
-        # Fallback: search using raw MongoDB query for nested dict field
-        lead = await Lead.find_one(
-            {"source": "telegram",
-             "details.telegram_chat_id": str(chat_id),
-             "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]}},
-        )
     if lead:
         return await Business.get(lead.business_id)
     return None
@@ -274,9 +270,9 @@ async def _handle_rep_command(bot, data: dict, business: Business | None = None)
         return {"status": "ok", "scope": "rep", "command": "today"}
 
     if lowered == "leads":
-        query = Lead.find().sort(-Lead.created_at).limit(10)
+        query = Lead.find().sort("-created_at").limit(10)
         if business:
-            query = Lead.find(Lead.business_id == business.id).sort(-Lead.created_at).limit(10)
+            query = Lead.find({"business_id": business.id}).sort("-created_at").limit(10)
         leads = await query.to_list()
         summary = "\n".join(
             f"{str(lead.id)[:8]}.. | {lead.customer_name or 'Unknown'} | {lead.stage.value} | {lead.score}"

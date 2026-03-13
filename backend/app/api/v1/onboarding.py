@@ -113,7 +113,7 @@ async def register_business(payload: RegisterPayload):
     code = _generate_deep_link_code()
 
     # Ensure uniqueness (extremely unlikely collision)
-    while await Business.find_one(Business.deep_link_code == code):
+    while await Business.find_one({"deep_link_code": code}):
         code = _generate_deep_link_code()
 
     industry = payload.industry.lower().strip()

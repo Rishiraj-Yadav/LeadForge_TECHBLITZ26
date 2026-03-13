@@ -44,6 +44,7 @@ async def init_mongodb():
             serverSelectionTimeoutMS=5000,
             connectTimeoutMS=5000,
             socketTimeoutMS=10000,
+            tlsAllowInvalidCertificates=True,
         )
         _db = _client[db_name]
 

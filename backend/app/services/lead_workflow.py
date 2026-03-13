@@ -42,7 +42,7 @@ async def resolve_business_id(business_id: str | None) -> PydanticObjectId:
             return existing.id
 
     # Fallback: use first business
-    business = await Business.find_one(sort="+created_at")
+    business = await Business.find_one(sort="created_at")
     if business:
         return business.id
 
@@ -102,8 +102,7 @@ async def get_or_create_lead_for_channel(
 
 async def get_or_create_conversation(lead_id: PydanticObjectId, channel: str) -> Conversation:
     conversation = await Conversation.find_one(
-        Conversation.lead_id == lead_id,
-        Conversation.channel == channel,
+        {"lead_id": lead_id, "channel": channel}
     )
     if conversation:
         return conversation
@@ -139,8 +138,8 @@ async def append_message(
 async def _load_conversation_history(conversation_id: PydanticObjectId) -> list[dict]:
     """Load all messages in a conversation for Gemini context."""
     messages = await Message.find(
-        Message.conversation_id == conversation_id
-    ).sort(+Message.created_at).to_list()
+        {"conversation_id": conversation_id}
+    ).sort("created_at").to_list()
     return [{"role": m.role, "content": m.content} for m in messages]
 
 
@@ -399,7 +398,7 @@ async def apply_rep_decision(lead_id: PydanticObjectId, decision: str) -> tuple[
         return lead, []
 
     conversation = await Conversation.find_one(
-        Conversation.lead_id == lead.id,
+        {"lead_id": lead.id},
         sort="-created_at",
     )
     if not conversation:
@@ -407,8 +406,7 @@ async def apply_rep_decision(lead_id: PydanticObjectId, decision: str) -> tuple[
         return lead, []
 
     last_customer_message = await Message.find_one(
-        Message.conversation_id == conversation.id,
-        Message.role == "customer",
+        {"conversation_id": conversation.id, "role": "customer"},
         sort="-created_at",
     )
     if not last_customer_message:

@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=list[LeadSummary])
 async def list_leads():
-    leads = await Lead.find_all().sort(-Lead.created_at).to_list()
+    leads = await Lead.find_all().sort("-created_at").to_list()
     return leads
 
 
@@ -48,6 +48,6 @@ async def update_lead(lead_id: str, payload: LeadUpdate):
 @router.get("/{lead_id}/conversations", response_model=list[ConversationResponse])
 async def get_lead_conversations(lead_id: str):
     conversations = await Conversation.find(
-        Conversation.lead_id == PydanticObjectId(lead_id)
-    ).sort(-Conversation.created_at).to_list()
+        {"lead_id": PydanticObjectId(lead_id)}
+    ).sort("-created_at").to_list()
     return conversations
