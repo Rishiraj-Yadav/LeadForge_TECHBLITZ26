@@ -1,0 +1,423 @@
+# TechBlitz26 - Intelligent Sales Agent System - Complete Context
+
+## Project Overview
+Build an AI-powered multi-agent system that captures leads from multiple sources, automatically researches and scores them, notifies sales reps via WhatsApp/Telegram for approval, and handles complete outreach and follow-up autonomously across messaging, email, and voice calls.
+
+## Core Problem Statement
+Small and mid-size businesses lose leads daily because:
+- Slow response times (hours/days instead of minutes)
+- Inconsistent follow-up (reps forget after first attempt)
+- Manual CRM maintenance (goes unmaintained)
+- No pipeline visibility without physically checking
+- Leads arrive via website, Instagram, WhatsApp while rep is busy
+
+Result: Silent revenue leakage every single day.
+
+## Mandatory Requirements
+
+### 1. Multi-Source Lead Capture
+- Website forms (embedded widget)
+- Instagram DMs (Meta Graph API)
+- WhatsApp Business messages (Meta Cloud API)
+- Email inquiries (forwarding or IMAP)
+- Voice calls (Twilio)
+- Manual lead entry (dashboard)
+
+### 2. Automatic Lead Research & Scoring
+- Research agent searches web for legitimacy
+- Checks company/person credibility
+- Extracts budget indicators from conversation
+- Analyzes urgency level and intent quality
+- Assigns 0-10 score with reasoning
+- Completes in <5 seconds
+
+### 3. Rep Notification System
+- WhatsApp or Telegram bot sends alert
+- Simple approve/reject decision (buttons)
+- Mobile-first (no laptop needed)
+- Lead summary card with key details
+- Real-time updates
+
+### 4. Automated Outreach (Post-Approval)
+- First response within 60 seconds
+- Email + messaging multi-channel approach
+- Personalized message generation (not robotic)
+- Context-aware (references lead's specific inquiry)
+- No manual prompting required
+
+### 5. Intelligent Follow-Up System
+- Automatic follow-ups if lead goes silent
+- Timing optimization (learns best response times)
+- Multi-sequence approach (Day 1, 2, 4, 7)
+- Sentiment-aware messaging
+- Stops if lead responds or asks to stop
+
+### 6. Voice Call Integration
+- AI can receive inbound calls (Twilio)
+- Natural conversation using LLM
+- Speech-to-text (Deepgram) + Text-to-speech (ElevenLabs)
+- Transfers to human if complex
+- Records and transcribes all calls
+
+### 7. Pipeline Management
+- Auto-logs all activities to database
+- Rep notified only at key decision points
+- Full control from phone via WhatsApp commands
+- Real-time pipeline visibility
+- Stage tracking (new → contacted → qualified → proposal → won/lost)
+
+## Architecture Requirements
+
+### Multi-Agent System (LangGraph)
+Must implement 9 specialized agents with clear routing:
+
+1. **Intake Agent**
+   - Purpose: Normalize incoming leads from all channels
+   - Tools: WhatsApp parser, Instagram parser, Email parser, Form parser
+   - Output: Structured lead object
+   - Routes to: Research Agent
+
+2. **Research Agent**
+   - Purpose: Gather intelligence on lead
+   - Tools: Web search (Serper), Company lookup, Social scraper, Email validator
+   - Reasoning: Chain-of-thought legitimacy check
+   - Output: Research results with confidence score
+   - Routes to: Scoring Agent
+
+3. **Scoring Agent**
+   - Purpose: Evaluate lead quality (0-10 score)
+   - Tools: ML model, Rule-based system, Budget estimator
+   - Reasoning: Multi-criteria decision analysis
+   - Output: Score + detailed reasoning
+   - Routes to: Notification Agent
+
+4. **Notification Agent**
+   - Purpose: Alert rep with context
+   - Tools: WhatsApp Business API, Telegram Bot API, SMS backup
+   - Waits for: Rep approval/rejection via button click
+   - Routes to: Outreach Agent (if approved) or Archive (if rejected)
+
+5. **Outreach Agent**
+   - Purpose: Initial contact with approved lead
+   - Tools: Email service (SendGrid), WhatsApp messaging, Instagram DM
+   - Reasoning: Personalization engine (analyzes tone, context, urgency)
+   - Output: Personalized first message
+   - Routes to: Conversation Agent
+
+6. **Conversation Agent**
+   - Purpose: Handle ongoing dialogue with lead
+   - Tools: LLM for natural language, FAQ knowledge base, Product catalog, Availability checker
+   - Reasoning: Intent classification (question/objection/ready-to-buy/complex)
+   - Memory: Full conversation history via vector DB
+   - Routes to: Follow-up Agent / Voice Agent / Pipeline Agent / Rep escalation
+
+7. **Follow-Up Agent**
+   - Purpose: Re-engage silent leads
+   - Tools: Scheduling engine, Message sequencer, Engagement tracker
+   - Reasoning: Timing optimization (analyzes response patterns, timezone)
+   - Routes to: Conversation Agent (when lead responds)
+
+8. **Voice Agent**
+   - Purpose: Handle phone calls
+   - Tools: Twilio Voice, Deepgram STT, ElevenLabs TTS
+   - Reasoning: Conversation flow manager, sentiment detector
+   - Routes to: Pipeline Agent (after call) or Rep transfer
+
+9. **Pipeline Agent**
+   - Purpose: Update CRM and notify rep of progress
+   - Tools: Database updater, CRM API, Analytics engine
+   - Reasoning: Stage classification, close probability estimation
+   - Routes to: Follow-up Agent or Close (won/lost)
+
+### Agent Orchestration (LangGraph)
+```python
+State Machine Flow:
+Intake → Research → Scoring → Notification → [Wait for approval]
+  ↓ (if approved)
+Outreach → Conversation ↔ Follow-up
+  ↓
+Voice (optional) → Pipeline → Close
+
+Conditional Routing:
+- If score < 5: Auto-reject, notify rep
+- If score 5-7: Notify rep, wait for decision
+- If score > 7: Notify rep as high-priority
+- If conversation intent = "ready_to_buy": Route to Pipeline
+- If conversation intent = "needs_call": Route to Voice
+- If no response 48hrs: Route to Follow-up
+```
+
+### Agent Reasoning Requirements
+Each agent must use Chain-of-Thought reasoning:
+```
+Example (Research Agent):
+Thought: I need to verify if this is a legitimate business
+Action: Search company name on Google
+Observation: Found LinkedIn with 500+ employees
+Thought: Appears legitimate, check domain age
+Action: Query domain registry
+Observation: Domain registered 5 years ago
+Thought: Established company, likely has budget
+Conclusion: High legitimacy score (8/10)
+```
+
+## Technical Stack
+
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Agent Framework**: LangGraph + LangChain
+- **LLM**: Claude 3.5 Sonnet (primary), GPT-4 Turbo (backup)
+- **Database**: PostgreSQL (Supabase)
+- **Vector DB**: Pinecone (conversation memory)
+- **Cache**: Redis
+- **Queue**: Redis + BullMQ
+
+### APIs & Services
+- **WhatsApp**: Meta Cloud API (Business API)
+- **Instagram**: Meta Graph API
+- **Telegram**: Bot API
+- **Voice**: Twilio (calls), Deepgram (STT), ElevenLabs (TTS)
+- **Email**: SendGrid
+- **Search**: Serper API or Tavily
+- **Company Data**: Clearbit or Hunter.io
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **UI**: Tailwind CSS + shadcn/ui
+- **State**: Zustand + TanStack Query
+- **Real-time**: Socket.io
+
+### Infrastructure
+- **Hosting**: Vercel (frontend), Railway (backend)
+- **Monitoring**: Sentry (errors), PostHog (analytics)
+- **CI/CD**: GitHub Actions
+
+## Key Features
+
+### Industry-Adaptive System
+Must work for any business type without pre-configuration:
+- Restaurant/Catering: Captures guest count, date, event type, dietary needs
+- Hotel: Captures check-in/out, room type, guest count
+- Real Estate: Captures property type, budget, location, timeline
+- Generic: Learns from conversations what matters
+
+**Implementation**: Conversational AI extracts structured data from natural chat
+```
+Example:
+Lead: "I need catering for a party"
+AI: "Great! How many guests?" [extracts: event_type=party]
+Lead: "About 50 people"
+AI: "Perfect! What date?" [extracts: guest_count=50]
+```
+
+### Phone-First Control
+Rep can control entire system via WhatsApp commands:
+- "today" → Pipeline summary
+- "leads" → List active leads
+- "approve #123" → Approve lead
+- "won #123 $5000" → Mark deal won
+
+### Voice Intelligence
+- AI answers inbound calls with natural voice
+- Conducts qualification conversation
+- Transfers to human if needed
+- Makes outbound follow-up calls
+
+### Emergency Escalation
+Detects urgent situations and immediately alerts rep:
+- High-value lead (score 9+)
+- Lead expresses frustration (sentiment < 0.3)
+- Competitor mentioned
+- Ready to buy right now
+
+## Data Models
+
+### Lead Schema
+```python
+{
+  "id": "lead_abc123",
+  "business_id": "biz_456",
+  "source": "whatsapp|instagram|email|voice|form",
+  "created_at": "2026-03-12T15:45:00Z",
+  
+  "customer": {
+    "phone": "+919876543210",
+    "name": "Extracted from conversation",
+    "email": "if_provided@email.com"
+  },
+  
+  "details": {  # Industry-specific, dynamic JSON
+    # For Restaurant:
+    "event_type": "birthday_party",
+    "guest_count": 25,
+    "date": "2026-03-22",
+    "time": "19:00",
+    # Fields learned from conversation
+  },
+  
+  "score": 8.5,
+  "score_reasoning": "High intent, specific date, good budget indicators",
+  "stage": "contacted|qualified|proposal|negotiation|won|lost",
+  "rep_decision": "approved|rejected|pending",
+  
+  "conversation_history": [
+    {"role": "customer", "content": "...", "timestamp": "..."},
+    {"role": "ai", "content": "...", "timestamp": "..."}
+  ],
+  
+  "research_data": {
+    "legitimacy_score": 9,
+    "company_info": {...},
+    "social_profiles": [...]
+  }
+}
+```
+
+### Conversation Schema
+```python
+{
+  "id": "conv_xyz",
+  "lead_id": "lead_abc123",
+  "channel": "whatsapp",
+  "messages": [...],
+  "intent": "inquiry|qualification|objection|ready_to_buy",
+  "sentiment": 0.8,
+  "last_activity": "2026-03-12T16:00:00Z",
+  "next_followup": "2026-03-13T10:00:00Z"
+}
+```
+
+## WhatsApp Integration Details
+
+### Setup Requirements
+1. Facebook Business Manager account
+2. WhatsApp Business API access
+3. Verified business
+4. Webhook endpoint (HTTPS required)
+
+### Webhook Flow
+```
+Customer Message → Meta WhatsApp Server
+  ↓
+POST https://yourapi.com/webhooks/whatsapp
+  ↓
+Intake Agent processes
+  ↓
+Response back to Meta API
+  ↓
+Customer receives reply
+```
+
+### Message Format
+```python
+# Incoming webhook payload
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "changes": [{
+      "value": {
+        "messages": [{
+          "from": "919876543210",
+          "text": {"body": "I need catering"},
+          "type": "text",
+          "timestamp": "1710255600"
+        }]
+      }
+    }]
+  }]
+}
+
+# Outgoing message
+{
+  "messaging_product": "whatsapp",
+  "to": "919876543210",
+  "type": "text",
+  "text": {"body": "Great! How many guests?"}
+}
+
+# Interactive buttons (for rep approval)
+{
+  "messaging_product": "whatsapp",
+  "to": "rep_phone_number",
+  "type": "interactive",
+  "interactive": {
+    "type": "button",
+    "body": {"text": "New lead from Instagram..."},
+    "action": {
+      "buttons": [
+        {"type": "reply", "reply": {"id": "approve", "title": "✅ Approve"}},
+        {"type": "reply", "reply": {"id": "reject", "title": "❌ Reject"}}
+      ]
+    }
+  }
+}
+```
+
+## Success Metrics
+
+### Performance Targets
+- Lead capture to first response: < 60 seconds
+- Research completion: < 5 seconds
+- Rep notification delivery: < 10 seconds
+- Follow-up accuracy: 95%+ sent on time
+- System uptime: 99.9%
+
+### Business Metrics
+- Lead response rate: Should increase by 80%+
+- Follow-up consistency: Should reach 100% (vs ~20% manual)
+- Rep time saved: 5+ hours/week
+- Conversion rate: Should increase 30%+
+
+## Security & Compliance
+- GDPR-compliant data storage
+- Webhook signature verification
+- Rate limiting on all endpoints
+- Encryption at rest and in transit
+- Auto-deletion of rejected leads (30 days)
+- Consent management for communications
+
+## Error Handling
+- Retry logic for failed API calls (exponential backoff)
+- Fallback to rep notification if agent fails
+- Graceful degradation (if Claude API down, use GPT-4)
+- Dead letter queue for failed jobs
+- Comprehensive logging (all agent decisions)
+
+## Testing Requirements
+- Unit tests for each agent (pytest)
+- Integration tests for full flow
+- Mock webhooks for development
+- Load testing (100 concurrent leads)
+- Voice call simulation
+
+## Deployment Strategy
+- Staging environment for testing
+- Blue-green deployment for zero downtime
+- Database migrations with rollback
+- Feature flags for gradual rollout
+- Monitoring alerts for critical errors
+
+## Team Coordination
+This project should be divided among 3 developers:
+- **Developer 1**: Backend + Agents (core orchestration)
+- **Developer 2**: Integrations (WhatsApp, voice, email)
+- **Developer 3**: Frontend + Dashboard
+
+Use feature branches, pull requests, and never commit directly to main.
+
+## Development Priority
+1. Week 1: WhatsApp integration + basic agent flow
+2. Week 2: Multi-agent orchestration + scoring
+3. Week 3: Voice + advanced features
+4. Week 4: Polish + testing + deployment
+
+---
+
+When building this system, prioritize:
+1. **Reliability**: System must never miss a lead
+2. **Speed**: Sub-second response times
+3. **Intelligence**: Natural conversations, not robotic
+4. **Simplicity**: Rep can control everything from phone
+5. **Scalability**: Should handle 1000+ leads/day
+
+Build with production-quality code, comprehensive error handling, and thorough testing.

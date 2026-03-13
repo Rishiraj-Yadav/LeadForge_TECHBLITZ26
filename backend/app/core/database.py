@@ -9,10 +9,13 @@ from app.config import get_settings
 settings = get_settings()
 
 # ── SQLAlchemy async engine ──
-_db_url = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-engine = create_async_engine(_db_url, echo=settings.DEBUG, pool_size=20, max_overflow=10)
-async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
+if settings.DATABASE_URL:
+    _db_url = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    engine = create_async_engine(_db_url, echo=settings.DEBUG, pool_size=20, max_overflow=10)
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+else:
+    engine = None
+    async_session = None
 
 class Base(DeclarativeBase):
     pass
@@ -20,12 +23,20 @@ class Base(DeclarativeBase):
 
 async def init_db():
     """Create tables (dev only — use Alembic in production)."""
+    if engine is None:
+        print("Warning: DATABASE_URL is not set. Skipping DB initialization.")
+        return
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def get_db() -> AsyncSession:
+from typing import AsyncGenerator
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency: yields an async database session."""
+    if async_session is None:
+        raise RuntimeError("Database URL not configured")
+        
     async with async_session() as session:
         try:
             yield session
