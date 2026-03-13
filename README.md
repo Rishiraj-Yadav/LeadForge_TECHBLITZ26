@@ -68,7 +68,7 @@ npm install
 npm run dev
 ```
 
-With Redis running locally, the app is available at `http://localhost:3000` and the backend at `http://localhost:8000`.
+With Redis running locally, the app is available at `http://localhost:3000` and the backend at `http://localhost:8005`.
 
 ### Telegram Flow
 - Customer sends a message to your Telegram bot.
