@@ -93,14 +93,59 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
     # ── 1. Callback queries (approve/reject buttons) ──
     if data["type"] == "callback":
         if data.get("callback_query_id"):
-            await bot.answer_callback_query(data["callback_query_id"], "Decision received")
+            try:
+                await bot.answer_callback_query(data["callback_query_id"], "Processing...")
+            except Exception:
+                pass
         command = data.get("text", "")
+
         if command.startswith("approve:") or command.startswith("reject:"):
             action, _, raw_lead_id = command.partition(":")
-            lead, sent = await apply_rep_decision(PydanticObjectId(raw_lead_id), action)
-            status_msg = f"Lead {raw_lead_id[:8]}... marked {action}."
+            try:
+                lead, sent = await apply_rep_decision(PydanticObjectId(raw_lead_id), action)
+            except Exception as exc:
+                print(f"Error in apply_rep_decision: {exc}")
+                # Still mark the lead even if outreach fails
+                try:
+                    from app.models.lead import RepDecision
+                    lead = await Lead.get(PydanticObjectId(raw_lead_id))
+                    if lead:
+                        if action == "approve":
+                            lead.rep_decision = RepDecision.APPROVED
+                            lead.stage = LeadStage.CONTACTED
+                        else:
+                            lead.rep_decision = RepDecision.REJECTED
+                            lead.stage = LeadStage.LOST
+                        await lead.save()
+                except Exception:
+                    lead = None
+                sent = []
+
             if lead:
-                await bot.send_message(str(data["chat_id"]), status_msg)
+                if action == "approve":
+                    # Build detailed saved info
+                    details = lead.details or {}
+                    detail_lines = []
+                    for k, v in details.items():
+                        if v and k not in ("telegram_chat_id", "telegram_username", "deep_link_code", "is_start"):
+                            detail_lines.append(f"  {k}: {v}")
+                    detail_text = "\n".join(detail_lines) if detail_lines else "  No details captured"
+
+                    msg = (
+                        f"✅ Lead APPROVED\n\n"
+                        f"Name: {lead.customer_name or 'Unknown'}\n"
+                        f"Score: {lead.score}/10\n"
+                        f"Stage: {lead.stage.value}\n\n"
+                        f"Captured Details:\n{detail_text}\n\n"
+                        f"Lead ID: {str(lead.id)}"
+                    )
+                else:
+                    msg = f"❌ Lead REJECTED — {raw_lead_id[:8]}... discarded."
+
+                await bot.send_message(str(data["chat_id"]), msg)
+            else:
+                await bot.send_message(str(data["chat_id"]), f"Lead {raw_lead_id[:8]}... not found.")
+
             return {
                 "status": "ok",
                 "decision": action,
@@ -108,6 +153,38 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
                 "updated": bool(lead),
                 "sent": sent,
             }
+
+        if command.startswith("view_chat:"):
+            raw_lead_id = command.split(":", 1)[1]
+            try:
+                lead = await Lead.get(PydanticObjectId(raw_lead_id))
+                if lead:
+                    details = lead.details or {}
+                    detail_lines = []
+                    for k, v in details.items():
+                        if v and k not in ("telegram_chat_id", "telegram_username", "deep_link_code", "is_start"):
+                            detail_lines.append(f"  {k}: {v}")
+                    detail_text = "\n".join(detail_lines) if detail_lines else "  No details captured"
+
+                    msg = (
+                        f"📋 Lead Details\n\n"
+                        f"Name: {lead.customer_name or 'Unknown'}\n"
+                        f"Phone: {lead.customer_phone or '—'}\n"
+                        f"Email: {lead.customer_email or '—'}\n"
+                        f"Score: {lead.score}/10\n"
+                        f"Stage: {lead.stage.value}\n"
+                        f"Decision: {lead.rep_decision.value}\n\n"
+                        f"Captured Info:\n{detail_text}\n\n"
+                        f"Score Reasoning: {lead.score_reasoning or '—'}\n\n"
+                        f"Lead ID: {str(lead.id)}"
+                    )
+                    await bot.send_message(str(data["chat_id"]), msg)
+                else:
+                    await bot.send_message(str(data["chat_id"]), "Lead not found.")
+            except Exception as exc:
+                await bot.send_message(str(data["chat_id"]), f"Error loading lead: {exc}")
+            return {"status": "ok", "scope": "view_chat"}
+
         return {"status": "ok", "decision": command}
 
     # ── 2. /register — owner starts Telegram onboarding wizard ──
@@ -296,61 +373,253 @@ async def _handle_rep_command(bot, data: dict, business: Business | None = None)
     lowered = text.lower()
     chat_id = str(data["chat_id"])
 
-    if lowered == "today":
+    # ── /help — show all commands ──
+    if lowered in ("/help", "help", "/start"):
+        biz_name = business.name if business else "LeadForge"
+        await bot.send_message(
+            chat_id,
+            f"📋 {biz_name} — Owner Commands\n\n"
+            f"📊 Statistics:\n"
+            f"  /stats — full business analytics\n"
+            f"  /today — today's pipeline summary\n\n"
+            f"👥 Customer Management:\n"
+            f"  /customers — all contacted customers\n"
+            f"  /approved — approved enquiries\n"
+            f"  /rejected — rejected enquiries\n"
+            f"  /leads — recent 10 leads with scores\n"
+            f"  /detail <lead_id> — view full details of a lead\n\n"
+            f"✅ Actions:\n"
+            f"  approve <lead_id> — approve a lead\n"
+            f"  reject <lead_id> — reject a lead\n"
+            f"  won <lead_id> <amount> — mark as won\n\n"
+            f"🔧 Setup:\n"
+            f"  /register — register a new business\n"
+        )
+        return {"status": "ok", "scope": "rep", "command": "help"}
+
+    # ── /stats — full business analytics ──
+    if lowered in ("/stats", "stats"):
+        from app.services.lead_workflow import pipeline_counts
+        from app.models.lead import RepDecision
+
+        try:
+            counts = await pipeline_counts(business_id=business.id if business else None)
+
+            # Total customers
+            match = {"business_id": business.id} if business else {}
+            total = await Lead.find(match).count()
+
+            # Approved / Rejected counts
+            approved = await Lead.find({**match, "rep_decision": RepDecision.APPROVED.value}).count()
+            rejected = await Lead.find({**match, "rep_decision": RepDecision.REJECTED.value}).count()
+            pending = await Lead.find({**match, "rep_decision": RepDecision.PENDING.value}).count()
+
+            # Average score
+            score_pipeline = []
+            if match:
+                score_pipeline.append({"$match": match})
+            score_pipeline.append({"$group": {"_id": None, "avg_score": {"$avg": "$score"}}})
+            score_result = await Lead.aggregate(score_pipeline).to_list()
+            avg_score = round(score_result[0]["avg_score"], 1) if score_result and score_result[0].get("avg_score") else 0
+
+            # Won deals
+            won = counts.get("won", 0)
+
+            biz_name = business.name if business else "LeadForge"
+            msg = (
+                f"📊 {biz_name} — Statistics\n\n"
+                f"👥 Total Enquiries: {total}\n"
+                f"✅ Approved: {approved}\n"
+                f"❌ Rejected: {rejected}\n"
+                f"⏳ Pending: {pending}\n"
+                f"🏆 Won: {won}\n\n"
+                f"📈 Average Score: {avg_score}/10\n\n"
+                f"Pipeline Breakdown:\n"
+            )
+            for stage, count in counts.items():
+                emoji = {"new": "🆕", "contacted": "📞", "qualified": "✅", "proposal": "📝", "won": "🏆", "lost": "❌"}.get(stage, "•")
+                msg += f"  {emoji} {stage}: {count}\n"
+
+            await bot.send_message(chat_id, msg)
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error loading stats: {exc}")
+        return {"status": "ok", "scope": "rep", "command": "stats"}
+
+    # ── /today — today's pipeline summary ──
+    if lowered in ("/today", "today"):
         from app.services.lead_workflow import pipeline_counts
 
-        counts = await pipeline_counts(business_id=business.id if business else None)
-        summary = "\n".join(f"{key}: {value}" for key, value in counts.items())
-        title = f"{business.name} Pipeline" if business else "Pipeline"
-        await bot.send_message(chat_id, f"{title}\n\n{summary}")
+        try:
+            counts = await pipeline_counts(business_id=business.id if business else None)
+            summary = "\n".join(f"  {key}: {value}" for key, value in counts.items())
+            title = f"{business.name} — Today's Pipeline" if business else "Today's Pipeline"
+            await bot.send_message(chat_id, f"📊 {title}\n\n{summary}")
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error loading pipeline: {exc}")
         return {"status": "ok", "scope": "rep", "command": "today"}
 
-    if lowered == "leads":
-        query = Lead.find().sort("-created_at").limit(10)
-        if business:
-            query = Lead.find({"business_id": business.id}).sort("-created_at").limit(10)
-        leads = await query.to_list()
-        summary = "\n".join(
-            f"{str(lead.id)[:8]}.. | {lead.customer_name or 'Unknown'} | {lead.stage.value} | {lead.score}"
-            for lead in leads
-        ) or "No leads found"
-        await bot.send_message(chat_id, f"Recent leads\n\n{summary}")
+    # ── /customers — all contacted customers ──
+    if lowered in ("/customers", "customers"):
+        try:
+            match = {"business_id": business.id} if business else {}
+            leads = await Lead.find(match).sort("-score").limit(20).to_list()
+            if leads:
+                lines = []
+                for i, lead in enumerate(leads, 1):
+                    status = "✅" if lead.rep_decision.value == "approved" else "❌" if lead.rep_decision.value == "rejected" else "⏳"
+                    lines.append(
+                        f"{i}. {status} {lead.customer_name or 'Unknown'} | "
+                        f"Score: {lead.score} | {lead.stage.value} | "
+                        f"ID: {str(lead.id)[:8]}.."
+                    )
+                msg = f"👥 All Customers (sorted by score)\n\n" + "\n".join(lines)
+            else:
+                msg = "No customers found yet."
+            await bot.send_message(chat_id, msg)
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error loading customers: {exc}")
+        return {"status": "ok", "scope": "rep", "command": "customers"}
+
+    # ── /approved — approved enquiries ──
+    if lowered in ("/approved", "approved"):
+        from app.models.lead import RepDecision
+        try:
+            match = {"rep_decision": RepDecision.APPROVED.value}
+            if business:
+                match["business_id"] = business.id
+            leads = await Lead.find(match).sort("-score").limit(20).to_list()
+            if leads:
+                lines = []
+                for i, lead in enumerate(leads, 1):
+                    lines.append(
+                        f"{i}. {lead.customer_name or 'Unknown'} | "
+                        f"Score: {lead.score} | {lead.stage.value} | "
+                        f"ID: {str(lead.id)[:8]}.."
+                    )
+                msg = f"✅ Approved Enquiries ({len(leads)})\n\n" + "\n".join(lines)
+            else:
+                msg = "No approved enquiries yet."
+            await bot.send_message(chat_id, msg)
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error: {exc}")
+        return {"status": "ok", "scope": "rep", "command": "approved"}
+
+    # ── /rejected — rejected enquiries ──
+    if lowered in ("/rejected", "rejected"):
+        from app.models.lead import RepDecision
+        try:
+            match = {"rep_decision": RepDecision.REJECTED.value}
+            if business:
+                match["business_id"] = business.id
+            leads = await Lead.find(match).sort("-created_at").limit(20).to_list()
+            if leads:
+                lines = []
+                for i, lead in enumerate(leads, 1):
+                    lines.append(
+                        f"{i}. {lead.customer_name or 'Unknown'} | "
+                        f"Score: {lead.score} | {lead.stage.value} | "
+                        f"ID: {str(lead.id)[:8]}.."
+                    )
+                msg = f"❌ Rejected Enquiries ({len(leads)})\n\n" + "\n".join(lines)
+            else:
+                msg = "No rejected enquiries."
+            await bot.send_message(chat_id, msg)
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error: {exc}")
+        return {"status": "ok", "scope": "rep", "command": "rejected"}
+
+    # ── /leads — recent leads ──
+    if lowered in ("/leads", "leads"):
+        try:
+            query = Lead.find().sort("-created_at").limit(10)
+            if business:
+                query = Lead.find({"business_id": business.id}).sort("-created_at").limit(10)
+            leads = await query.to_list()
+            if leads:
+                lines = []
+                for lead in leads:
+                    status = "✅" if lead.rep_decision.value == "approved" else "❌" if lead.rep_decision.value == "rejected" else "⏳"
+                    lines.append(
+                        f"{status} {lead.customer_name or 'Unknown'} | "
+                        f"Score: {lead.score} | {lead.stage.value} | "
+                        f"ID: {str(lead.id)[:8]}.."
+                    )
+                msg = "📋 Recent Leads\n\n" + "\n".join(lines)
+            else:
+                msg = "No leads found."
+            await bot.send_message(chat_id, msg)
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error loading leads: {exc}")
         return {"status": "ok", "scope": "rep", "command": "leads"}
 
+    # ── /detail <lead_id> — full lead details ──
+    if lowered.startswith("/detail ") or lowered.startswith("detail "):
+        raw_id = text.split(maxsplit=1)[1].strip()
+        try:
+            lead = await Lead.get(PydanticObjectId(raw_id))
+            if lead:
+                details = lead.details or {}
+                detail_lines = []
+                for k, v in details.items():
+                    if v and k not in ("telegram_chat_id", "telegram_username", "deep_link_code", "is_start"):
+                        detail_lines.append(f"  {k}: {v}")
+                detail_text = "\n".join(detail_lines) if detail_lines else "  No details captured"
+
+                msg = (
+                    f"📋 Lead Details\n\n"
+                    f"Name: {lead.customer_name or 'Unknown'}\n"
+                    f"Phone: {lead.customer_phone or '—'}\n"
+                    f"Email: {lead.customer_email or '—'}\n"
+                    f"Source: {lead.source.value if hasattr(lead.source, 'value') else lead.source}\n"
+                    f"Score: {lead.score}/10\n"
+                    f"Stage: {lead.stage.value}\n"
+                    f"Decision: {lead.rep_decision.value}\n\n"
+                    f"Captured Info:\n{detail_text}\n\n"
+                    f"Score Reasoning: {lead.score_reasoning or '—'}\n\n"
+                    f"Lead ID: {str(lead.id)}"
+                )
+                await bot.send_message(chat_id, msg)
+            else:
+                await bot.send_message(chat_id, "Lead not found.")
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error: {exc}")
+        return {"status": "ok", "scope": "rep", "command": "detail"}
+
+    # ── approve / reject text commands ──
     if lowered.startswith("approve ") or lowered.startswith("reject "):
         action, raw_lead_id = lowered.split(maxsplit=1)
-        lead, sent = await apply_rep_decision(PydanticObjectId(raw_lead_id), action)
-        if lead:
-            await bot.send_message(chat_id, f"Lead {str(lead.id)[:8]}.. marked {action}.")
-            return {
-                "status": "ok",
-                "scope": "rep",
-                "command": action,
-                "lead_id": raw_lead_id,
-                "sent": sent,
-            }
+        try:
+            lead, sent = await apply_rep_decision(PydanticObjectId(raw_lead_id), action)
+            if lead:
+                await bot.send_message(chat_id, f"{'✅' if action == 'approve' else '❌'} Lead {str(lead.id)[:8]}.. marked {action}.")
+        except Exception as exc:
+            await bot.send_message(chat_id, f"Error: {exc}")
+            lead, sent = None, []
+        return {"status": "ok", "scope": "rep", "command": action, "lead_id": raw_lead_id, "sent": sent if sent else []}
 
+    # ── won command ──
     if lowered.startswith("won "):
         parts = text.split(maxsplit=2)
         if len(parts) >= 2:
-            lead = await Lead.get(PydanticObjectId(parts[1]))
-            if lead:
-                lead.stage = LeadStage.WON
-                if len(parts) == 3:
-                    details = dict(lead.details or {})
-                    details["deal_value"] = parts[2]
-                    lead.details = details
-                await lead.save()
-                await bot.send_message(chat_id, f"Lead {str(lead.id)[:8]}.. marked won.")
-                return {"status": "ok", "scope": "rep", "command": "won", "lead_id": parts[1]}
+            try:
+                lead = await Lead.get(PydanticObjectId(parts[1]))
+                if lead:
+                    lead.stage = LeadStage.WON
+                    if len(parts) == 3:
+                        details = dict(lead.details or {})
+                        details["deal_value"] = parts[2]
+                        lead.details = details
+                    await lead.save()
+                    await bot.send_message(chat_id, f"🏆 Lead {str(lead.id)[:8]}.. marked WON!")
+                    return {"status": "ok", "scope": "rep", "command": "won", "lead_id": parts[1]}
+            except Exception as exc:
+                await bot.send_message(chat_id, f"Error: {exc}")
 
+    # ── Unknown command — show help ──
+    biz_name = business.name if business else "LeadForge"
     await bot.send_message(
         chat_id,
-        "Commands:\n"
-        "today — pipeline summary\n"
-        "leads — recent leads\n"
-        "approve <lead_id> — approve a lead\n"
-        "reject <lead_id> — reject a lead\n"
-        "won <lead_id> <amount> — mark as won",
+        f"Unknown command. Send /help to see all available commands for {biz_name}.",
     )
-    return {"status": "ok", "scope": "rep", "command": "help"}
+    return {"status": "ok", "scope": "rep", "command": "unknown"}
+
