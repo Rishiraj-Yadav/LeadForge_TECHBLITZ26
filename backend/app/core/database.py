@@ -5,6 +5,7 @@ not at module-import time.  This avoids hanging when the module is loaded.
 """
 
 import asyncio
+import ssl
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
@@ -24,9 +25,10 @@ def _get_db_name(url: str) -> str:
 
 
 async def init_mongodb():
-    """Create the Motor client and initialize Beanie ODM with all document models.
+    """Create the Motor client and initialize Beanie ODM.
 
-    Everything happens here so that nothing blocks at import time.
+    Tries up to 3 times with increasing timeouts.
+    Raises on failure so the caller (main.py) knows it didn't work.
     """
     global _client, _db
     settings = get_settings()
@@ -36,33 +38,52 @@ async def init_mongodb():
         return
 
     db_name = _get_db_name(settings.MONGODB_URL)
-    print(f"🔗 Connecting to MongoDB (db: {db_name}) …")
 
+    # Build a permissive TLS context (Atlas free-tier + Python 3.13 compat)
     try:
-        _client = AsyncIOMotorClient(
-            settings.MONGODB_URL,
-            serverSelectionTimeoutMS=5000,
-            connectTimeoutMS=5000,
-            socketTimeoutMS=10000,
-            tlsAllowInvalidCertificates=True,
-        )
-        _db = _client[db_name]
+        import certifi
+        ca_file = certifi.where()
+    except ImportError:
+        ca_file = None
 
-        # Force a real round-trip so we know the cluster is reachable.
-        await asyncio.wait_for(_client.admin.command("ping"), timeout=8)
-        print("✅ MongoDB ping successful")
+    max_attempts = 3
+    last_error = None
 
-    except asyncio.TimeoutError:
-        print("⚠️  MongoDB ping timed out (8 s) — continuing without DB")
-        print("   💡 Check that your MONGODB_URL is reachable")
-        _client = None
-        _db = None
-        return
-    except Exception as exc:
-        print(f"⚠️  MongoDB connection error: {exc} — continuing without DB")
-        _client = None
-        _db = None
-        return
+    for attempt in range(1, max_attempts + 1):
+        timeout = 5 * attempt  # 5s, 10s, 15s
+        print(f"🔗 MongoDB connect attempt {attempt}/{max_attempts} (db: {db_name}, timeout: {timeout}s) …")
+
+        try:
+            _client = AsyncIOMotorClient(
+                settings.MONGODB_URL,
+                serverSelectionTimeoutMS=timeout * 1000,
+                connectTimeoutMS=timeout * 1000,
+                socketTimeoutMS=timeout * 1000,
+                tls=True,
+                tlsAllowInvalidCertificates=True,
+                **({"tlsCAFile": ca_file} if ca_file else {}),
+            )
+            _db = _client[db_name]
+
+            # Force a real round-trip so we know the cluster is reachable.
+            await asyncio.wait_for(_client.admin.command("ping"), timeout=timeout)
+            print("✅ MongoDB ping successful")
+            break  # success — exit retry loop
+
+        except (asyncio.TimeoutError, Exception) as exc:
+            last_error = exc
+            tag = "Timeout" if isinstance(exc, asyncio.TimeoutError) else type(exc).__name__
+            print(f"⚠️  Attempt {attempt} failed ({tag}): {exc}")
+            _client = None
+            _db = None
+            if attempt < max_attempts:
+                wait = 2 * attempt
+                print(f"   Retrying in {wait}s …")
+                await asyncio.sleep(wait)
+
+    if _db is None:
+        print(f"❌ MongoDB connection failed after {max_attempts} attempts")
+        raise ConnectionError(f"Cannot reach MongoDB: {last_error}")
 
     # ── Init Beanie ──
     from app.models.business import Business
@@ -70,22 +91,16 @@ async def init_mongodb():
     from app.models.conversation import Conversation
     from app.models.message import Message
     from app.models.user import User
+    from app.models.onboarding_session import OnboardingSession
 
-    try:
-        await asyncio.wait_for(
-            init_beanie(
-                database=_db,
-                document_models=[Business, Lead, Conversation, Message, User],
-            ),
-            timeout=10,
-        )
-        print("✅ MongoDB initialized successfully (Beanie ODM ready)")
-    except asyncio.TimeoutError:
-        print("⚠️  Beanie init timed out after 10 s — continuing without DB")
-        _client = None
-        _db = None
-    except Exception as exc:
-        print(f"⚠️  Beanie init error: {exc} — continuing anyway")
+    await asyncio.wait_for(
+        init_beanie(
+            database=_db,
+            document_models=[Business, Lead, Conversation, Message, User, OnboardingSession],
+        ),
+        timeout=15,
+    )
+    print("✅ MongoDB initialized successfully (Beanie ODM ready)")
 
 
 def get_db():

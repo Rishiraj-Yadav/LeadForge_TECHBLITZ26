@@ -68,6 +68,20 @@ class TelegramBot:
             resp = await client.post(url, json=payload, timeout=30)
             return resp.json()
 
+    async def send_photo(self, chat_id: str, photo_bytes: bytes, caption: str = "") -> dict:
+        """Send a photo (PNG bytes) to a chat."""
+        url = f"{self.base_url}/sendPhoto"
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                url,
+                data={"chat_id": chat_id, "caption": caption},
+                files={"photo": ("qr.png", photo_bytes, "image/png")},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
     async def set_webhook(self, webhook_url: str) -> dict:
         """Register webhook URL with Telegram.
 

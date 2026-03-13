@@ -12,6 +12,11 @@ from app.schemas.webhook import FormSubmission
 from app.services.instagram.client import get_instagram_client
 from app.services.lead_workflow import process_customer_message, apply_rep_decision
 from app.services.telegram.bot import get_telegram_bot
+from app.services.telegram.onboarding_wizard import (
+    is_in_onboarding,
+    start_onboarding,
+    handle_onboarding_reply,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -61,6 +66,30 @@ async def telegram_webhook(
     bot = get_telegram_bot()
     data = bot.parse_webhook(payload)
 
+    # Extract early so we can use for error messages
+    text = (data.get("text") or "").strip()
+    chat_id = str(data.get("chat_id", ""))
+
+    try:
+        return await _handle_telegram_update(bot, data, text, chat_id)
+    except Exception as exc:
+        # Gracefully handle DB-not-connected or any other error
+        print(f"⚠️  Telegram webhook error: {exc}")
+        try:
+            if chat_id:
+                await bot.send_message(
+                    chat_id,
+                    "⚠️ Sorry, the service is temporarily unavailable. "
+                    "Please try again in a moment.",
+                )
+        except Exception:
+            pass
+        return {"status": "error", "detail": str(exc)}
+
+
+async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
+    """Core Telegram update handler — separated so we can wrap with try/except."""
+
     # ── 1. Callback queries (approve/reject buttons) ──
     if data["type"] == "callback":
         if data.get("callback_query_id"):
@@ -81,10 +110,17 @@ async def telegram_webhook(
             }
         return {"status": "ok", "decision": command}
 
-    text = (data.get("text") or "").strip()
-    chat_id = str(data.get("chat_id", ""))
+    # ── 2. /register — owner starts Telegram onboarding wizard ──
+    if text.startswith("/register"):
+        await start_onboarding(chat_id, bot)
+        return {"status": "ok", "scope": "owner_onboarding", "step": "started"}
 
-    # ── 2. /start deep link — customer or owner connecting ──
+    # ── 3. Owner is mid-onboarding wizard — process their reply ──
+    if await is_in_onboarding(chat_id):
+        await handle_onboarding_reply(chat_id, text, bot)
+        return {"status": "ok", "scope": "owner_onboarding"}
+
+    # ── 4. /start deep link — customer or owner connecting ──
     if text.startswith("/start"):
         parts = text.split(maxsplit=1)
         if len(parts) == 2:
