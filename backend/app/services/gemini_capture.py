@@ -54,6 +54,7 @@ class GeminiCaptureService:
         capture_fields: dict[str, bool],
         captured_so_far: dict,
         conversation_history: list[dict],
+        capture_questions: list[str] | None = None,
     ) -> dict:
         """Generate a conversational reply and extract structured data.
 
@@ -82,12 +83,27 @@ class GeminiCaptureService:
         ) if optional else "none"
         captured_text = json.dumps(captured_so_far, indent=2) if captured_so_far else "Nothing yet"
 
+        # Custom questions from business owner
+        custom_q_section = ""
+        if capture_questions:
+            custom_q_text = "\n".join(f"  Q{i+1}: {q}" for i, q in enumerate(capture_questions))
+            answered_qs = [q for q in capture_questions if f"q{capture_questions.index(q)+1}" in captured_so_far]
+            unanswered_qs = [q for q in capture_questions if q not in answered_qs]
+            custom_q_section = f"""
+IMPORTANT — The business owner wants you to ask these specific questions during the conversation:
+{custom_q_text}
+
+Use question keys like q1, q2, q3, q4, q5 in extracted_fields.
+Already answered: {len(answered_qs)}/{len(capture_questions)}
+Still need answers for: {', '.join(unanswered_qs) if unanswered_qs else 'ALL ANSWERED'}
+"""
+
         system_prompt = f"""You are a friendly, professional AI assistant for "{business_name}" ({business_industry}).
 {f"Services: {services_offered}" if services_offered else ""}
 
 Your job is to have a natural conversation with the customer, answer their questions helpfully, and progressively gather the information we need.
-
-REQUIRED fields to capture: {field_descriptions}
+{custom_q_section}
+REQUIRED fields to capture: {field_descriptions if field_descriptions else "see custom questions above"}
 OPTIONAL fields (ask only if natural): {optional_descriptions}
 Already captured: {captured_text}
 Still missing (required): {", ".join(missing) if missing else "ALL CAPTURED"}
@@ -108,7 +124,7 @@ Customer's latest message: "{message}"
 Respond with ONLY valid JSON (no markdown, no code fences):
 {{"reply": "your natural response", "extracted_fields": {{"field_name": "value"}}, "capture_complete": true/false}}
 
-For extracted_fields, only include fields you can confidently extract from this message. Use these exact field names: {', '.join(required + optional)}"""
+For extracted_fields, only include fields you can confidently extract from this message. Use these exact field names: {', '.join(required + optional + [f'q{i+1}' for i in range(len(capture_questions or []))])}"""
 
         try:
             response = await self.llm.ainvoke([

@@ -184,19 +184,20 @@ async def process_customer_message(
     # Load business configuration
     business = await _load_business(lead.business_id)
     capture_fields = (business.capture_fields if business else None) or {}
+    capture_questions = (business.capture_questions if business else None) or []
 
     # If already pipeline-processed (approved/rejected), handle as ongoing conversation
     if lead.rep_decision in (RepDecision.APPROVED, RepDecision.REJECTED):
         return await _handle_ongoing_conversation(lead, conversation, source, message_text, business)
 
     # ── PHASE 1: Gemini conversational capture ──
-    if capture_fields:
+    if capture_fields or capture_questions:
         history = await _load_conversation_history(conversation.id)
         capture_service = get_capture_service()
 
         captured_so_far = {
             k: v for k, v in (lead.details or {}).items()
-            if k in capture_fields
+            if k in capture_fields or k.startswith("q")
         }
 
         try:
@@ -208,6 +209,7 @@ async def process_customer_message(
                 capture_fields=capture_fields,
                 captured_so_far=captured_so_far,
                 conversation_history=history,
+                capture_questions=capture_questions,
             )
         except Exception as exc:
             logger.error(f"Gemini capture failed: {exc}")

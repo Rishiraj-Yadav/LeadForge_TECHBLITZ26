@@ -19,6 +19,7 @@ class Business(TimestampMixin, Document):
     business_hours: Optional[str] = None          # e.g., "Mon-Sat 9AM-10PM"
     services_offered: Optional[str] = None        # description of services/products
     capture_fields: dict = Field(default_factory=dict)  # {"guest_count": true, ...}
+    capture_questions: list = Field(default_factory=list)  # owner-defined questions for AI
     onboarding_complete: bool = False
     welcome_message: Optional[str] = None         # custom greeting for customers
 
