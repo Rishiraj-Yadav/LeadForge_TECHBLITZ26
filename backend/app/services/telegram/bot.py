@@ -1,4 +1,4 @@
-"""Telegram Bot API client for rep notifications."""
+"""Telegram Bot API client for customer conversations and rep notifications."""
 
 import httpx
 from app.config import get_settings
@@ -15,14 +15,15 @@ class TelegramBot:
         self.token = settings.TELEGRAM_BOT_TOKEN
         self.base_url = f"https://api.telegram.org/bot{self.token}"
 
-    async def send_message(self, chat_id: str, text: str, parse_mode: str = "Markdown") -> dict:
+    async def send_message(self, chat_id: str, text: str, parse_mode: str | None = None) -> dict:
         """Send a text message."""
         url = f"{self.base_url}/sendMessage"
         payload = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": parse_mode,
         }
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, json=payload, timeout=30)
             resp.raise_for_status()
@@ -40,7 +41,18 @@ class TelegramBot:
         payload = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "Markdown",
+            "reply_markup": {"inline_keyboard": buttons},
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json=payload, timeout=30)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def edit_message_reply_markup(self, chat_id: str, message_id: int, buttons: list[list[dict]]) -> dict:
+        url = f"{self.base_url}/editMessageReplyMarkup"
+        payload = {
+            "chat_id": chat_id,
+            "message_id": message_id,
             "reply_markup": {"inline_keyboard": buttons},
         }
         async with httpx.AsyncClient() as client:
@@ -64,6 +76,8 @@ class TelegramBot:
         """
         url = f"{self.base_url}/setWebhook"
         payload = {"url": webhook_url}
+        if settings.TELEGRAM_WEBHOOK_SECRET:
+            payload["secret_token"] = settings.TELEGRAM_WEBHOOK_SECRET
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, json=payload, timeout=30)
             resp.raise_for_status()
@@ -71,7 +85,7 @@ class TelegramBot:
 
     def parse_webhook(self, payload: dict) -> dict:
         """Parse incoming Telegram webhook update."""
-        result = {"type": None, "chat_id": None, "text": "", "username": ""}
+        result = {"type": None, "chat_id": None, "text": "", "username": "", "from_name": ""}
 
         if payload.get("callback_query"):
             cb = payload["callback_query"]
@@ -80,12 +94,16 @@ class TelegramBot:
             result["text"] = cb.get("data", "")
             result["callback_query_id"] = cb["id"]
             result["username"] = cb.get("from", {}).get("username", "")
+            result["from_name"] = cb.get("from", {}).get("first_name", "")
+            result["message_id"] = cb.get("message", {}).get("message_id")
         elif payload.get("message"):
             msg = payload["message"]
             result["type"] = "message"
             result["chat_id"] = msg["chat"]["id"]
             result["text"] = msg.get("text", "")
             result["username"] = msg.get("from", {}).get("username", "")
+            result["from_name"] = msg.get("from", {}).get("first_name", "")
+            result["message_id"] = msg.get("message_id")
 
         return result
 

@@ -14,6 +14,6 @@ def normalize_phone(raw: str, default_region: str = "IN") -> str | None:
     return None
 
 
-def phone_to_whatsapp_id(phone_e164: str) -> str:
-    """Strip leading '+' for WhatsApp API."""
+def phone_to_channel_id(phone_e164: str) -> str:
+    """Normalize a phone-based identifier for downstream channel usage."""
     return phone_e164.lstrip("+")

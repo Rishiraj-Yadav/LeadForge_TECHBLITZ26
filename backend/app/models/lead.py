@@ -1,15 +1,14 @@
 """Lead model — core entity."""
 
-from sqlalchemy import Column, String, Float, Text, ForeignKey, Enum as SAEnum, JSON
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
 import enum
+from typing import Optional
+from beanie import Document, PydanticObjectId
+from pydantic import Field
 
-from app.models.base import BaseModel
+from app.models.base import TimestampMixin
 
 
 class LeadSource(str, enum.Enum):
-    WHATSAPP = "whatsapp"
     INSTAGRAM = "instagram"
     EMAIL = "email"
     VOICE = "voice"
@@ -34,31 +33,28 @@ class RepDecision(str, enum.Enum):
     REJECTED = "rejected"
 
 
-class Lead(BaseModel):
-    __tablename__ = "leads"
-
-    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False)
-    source = Column(SAEnum(LeadSource), nullable=False)
+class Lead(TimestampMixin, Document):
+    business_id: PydanticObjectId
+    source: LeadSource
 
     # Customer info
-    customer_name = Column(String(255))
-    customer_phone = Column(String(20))
-    customer_email = Column(String(255))
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
 
     # Dynamic details (industry-specific)
-    details = Column(JSON, default=dict)
+    details: dict = Field(default_factory=dict)
 
     # Scoring
-    score = Column(Float, default=0.0)
-    score_reasoning = Column(Text)
+    score: float = 0.0
+    score_reasoning: Optional[str] = None
 
     # Research
-    research_data = Column(JSON, default=dict)
+    research_data: dict = Field(default_factory=dict)
 
     # Pipeline
-    stage = Column(SAEnum(LeadStage), default=LeadStage.NEW)
-    rep_decision = Column(SAEnum(RepDecision), default=RepDecision.PENDING)
+    stage: LeadStage = LeadStage.NEW
+    rep_decision: RepDecision = RepDecision.PENDING
 
-    # Relationships
-    business = relationship("Business", back_populates="leads")
-    conversations = relationship("Conversation", back_populates="lead", lazy="selectin")
+    class Settings:
+        name = "leads"

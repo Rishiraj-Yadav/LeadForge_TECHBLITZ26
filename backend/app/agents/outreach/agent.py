@@ -12,7 +12,19 @@ class OutreachAgent(BaseAgent):
     async def run(self, state: AgentState) -> AgentState:
         lead = state.get("lead", {})
         opening = generate_personalized_opening(lead)
-        reply = initial_message(opening, lead.get("message", ""))
+        packages = lead.get("details", {}).get("industry_hint")
+        if packages == "events":
+            reply = (
+                f"{opening} We have options for events like this. "
+                "Would you like a quick package summary or pricing first?"
+            )
+        elif packages == "hospitality":
+            reply = (
+                f"{opening} I can help narrow down room options and availability. "
+                "Would you like room suggestions or pricing first?"
+            )
+        else:
+            reply = initial_message(opening, lead.get("message", ""))
         history = lead.setdefault("conversation_history", [])
         history.append({"role": "ai", "content": reply})
         state["lead"] = lead

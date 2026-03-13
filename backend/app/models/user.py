@@ -1,27 +1,23 @@
 """User model — sales reps / admins."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from typing import Optional
+from beanie import Document, PydanticObjectId
 
-from app.models.base import BaseModel
+from app.models.base import TimestampMixin
 
 
-class User(BaseModel):
-    __tablename__ = "users"
-
-    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(255))
-    role = Column(String(20), default="rep")  # admin, rep
-    phone = Column(String(20))
-    is_active = Column(Boolean, default=True)
+class User(TimestampMixin, Document):
+    business_id: PydanticObjectId
+    email: str
+    hashed_password: str
+    full_name: Optional[str] = None
+    role: str = "rep"                          # admin, rep
+    phone: Optional[str] = None
+    is_active: bool = True
 
     # Notification preferences
-    whatsapp_number = Column(String(20))
-    telegram_chat_id = Column(String(50))
-    preferred_notification = Column(String(20), default="whatsapp")  # whatsapp, telegram
+    telegram_chat_id: Optional[str] = None
+    preferred_notification: str = "telegram"   # telegram, email
 
-    # Relationships
-    business = relationship("Business", back_populates="users")
+    class Settings:
+        name = "users"

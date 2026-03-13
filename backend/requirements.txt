@@ -12,16 +12,12 @@ langchain-google-genai==2.0.8
 langchain-community==0.3.14
 google-generativeai==0.8.4
 
-# ── Database ──
-supabase==2.11.0
-sqlalchemy==2.0.36
-alembic==1.14.1
-asyncpg==0.30.0
-psycopg2-binary==2.9.10
+# ── Database (MongoDB) ──
+motor==3.6.0
+beanie==1.27.0
 
 # ── Redis ──
 redis==5.2.1
-aioredis==2.0.1
 
 # ── Vector Database ──
 pinecone-client==5.0.1
@@ -32,7 +28,8 @@ aiohttp==3.11.11
 sendgrid==6.11.0
 twilio==9.4.0
 deepgram-sdk==3.8.0
-elevenlabs==1.50.0
+# 1.16.0 is not available for Python 3.13. 2.39.0 supports current code import path.
+elevenlabs==2.39.0
 
 # ── Utilities ──
 phonenumbers==8.13.52
@@ -41,6 +38,7 @@ python-multipart==0.0.19
 beautifulsoup4==4.12.3
 Jinja2==3.1.5
 email-validator==2.2.0
+qrcode==8.0
 
 # ── WebSocket ──
 python-socketio==5.12.1
@@ -49,7 +47,6 @@ python-socketio==5.12.1
 pytest==8.3.4
 pytest-asyncio==0.24.0
 pytest-cov==6.0.0
-httpx==0.28.1
 
 # ── Security ──
 python-jose[cryptography]==3.3.0

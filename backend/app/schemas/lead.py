@@ -1,7 +1,6 @@
 """Lead Pydantic schemas."""
 
 from datetime import datetime
-from uuid import UUID
 from pydantic import BaseModel, Field
 from typing import Any
 
@@ -13,7 +12,7 @@ class CustomerInfo(BaseModel):
 
 
 class LeadCreate(BaseModel):
-    business_id: UUID
+    business_id: str
     source: str
     customer_name: str | None = None
     customer_phone: str | None = None
@@ -33,8 +32,8 @@ class LeadUpdate(BaseModel):
 
 
 class LeadResponse(BaseModel):
-    id: UUID
-    business_id: UUID
+    id: str
+    business_id: str
     source: str
     customer_name: str | None
     customer_phone: str | None
@@ -52,7 +51,7 @@ class LeadResponse(BaseModel):
 
 
 class LeadSummary(BaseModel):
-    id: UUID
+    id: str
     source: str
     customer_name: str | None
     score: float

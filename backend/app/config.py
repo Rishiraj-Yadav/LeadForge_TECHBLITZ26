@@ -2,6 +2,7 @@
 
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -10,13 +11,10 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me"
-    API_BASE_URL: str = "http://localhost:8000"
+    API_BASE_URL: str = "http://localhost:8005"
 
-    # ── Supabase ──
-    SUPABASE_URL: str = ""
-    SUPABASE_ANON_KEY: str = ""
-    SUPABASE_SERVICE_ROLE_KEY: str = ""
-    DATABASE_URL: str = ""
+    # ── MongoDB ──
+    MONGODB_URL: str = ""
 
     # ── Redis ──
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -25,20 +23,14 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-pro"
 
-    # ── WhatsApp ──
-    WHATSAPP_ACCESS_TOKEN: str = ""
-    WHATSAPP_PHONE_NUMBER_ID: str = ""
-    WHATSAPP_BUSINESS_ACCOUNT_ID: str = ""
-    WHATSAPP_VERIFY_TOKEN: str = ""
-    WHATSAPP_API_VERSION: str = "v21.0"
-    REP_WHATSAPP_NUMBER: str = ""
-
     # ── Instagram ──
     INSTAGRAM_ACCESS_TOKEN: str = ""
     INSTAGRAM_BUSINESS_ACCOUNT_ID: str = ""
 
     # ── Telegram ──
     TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_USERNAME: str = ""  # e.g., "LeadForgeBot" — for t.me/BOT?start=CODE
+    TELEGRAM_WEBHOOK_SECRET: str = ""
     REP_TELEGRAM_CHAT_ID: str = ""
 
     # ── Twilio ──
@@ -66,7 +58,10 @@ class Settings(BaseSettings):
     PINECONE_INDEX_NAME: str = "leadforge-conversations"
     PINECONE_ENVIRONMENT: str = "us-east-1"
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
+    model_config = {
+        "env_file": str(Path(__file__).resolve().parents[1] / ".env"),
+        "extra": "ignore",
+    }
 
 
 @lru_cache()

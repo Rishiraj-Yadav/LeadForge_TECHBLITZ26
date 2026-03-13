@@ -1,23 +1,10 @@
-"""Base model with common columns."""
+"""Base helpers for Beanie document models."""
 
-import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, String
-from sqlalchemy.dialects.postgresql import UUID
-from app.core.database import Base
+from pydantic import Field
 
 
 class TimestampMixin:
-    """Adds created_at / updated_at to any model."""
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        nullable=False,
-    )
-
-
-class BaseModel(Base, TimestampMixin):
-    __abstract__ = True
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    """Adds created_at / updated_at to any Beanie Document via mixin."""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

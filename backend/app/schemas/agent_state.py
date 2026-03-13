@@ -16,6 +16,7 @@ class LeadData(TypedDict, total=False):
     message: str
     details: dict[str, Any]
     conversation_history: list[dict[str, str]]
+    missing_fields: list[str]
 
 
 class ResearchResult(TypedDict, total=False):
@@ -57,3 +58,5 @@ class AgentState(TypedDict, total=False):
     error: str | None
     should_escalate: bool
     follow_up_scheduled: bool
+    next_followup: str
+    pipeline: dict[str, Any]

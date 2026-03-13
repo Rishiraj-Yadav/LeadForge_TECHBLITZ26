@@ -49,9 +49,8 @@ async def get_current_user(creds: HTTPAuthorizationCredentials = Depends(bearer_
 
 
 # ── Webhook signature verification ──
-def verify_whatsapp_signature(payload: bytes, signature: str) -> bool:
-    """Verify X-Hub-Signature-256 header from Meta."""
-    expected = hmac.new(
-        settings.SECRET_KEY.encode(), payload, hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(f"sha256={expected}", signature)
+def verify_telegram_webhook_secret(secret_header: str | None) -> bool:
+    """Verify the optional Telegram secret token header."""
+    if not settings.TELEGRAM_WEBHOOK_SECRET:
+        return True
+    return hmac.compare_digest(secret_header or "", settings.TELEGRAM_WEBHOOK_SECRET)

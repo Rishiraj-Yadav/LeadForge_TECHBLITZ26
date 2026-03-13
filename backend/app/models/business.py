@@ -1,24 +1,31 @@
 """Business / tenant model."""
 
-from sqlalchemy import Column, String, Boolean
-from sqlalchemy.orm import relationship
-from app.models.base import BaseModel
+from typing import Optional
+from beanie import Document, Indexed
+from pydantic import Field
+
+from app.models.base import TimestampMixin
 
 
-class Business(BaseModel):
-    __tablename__ = "businesses"
+class Business(TimestampMixin, Document):
+    name: str
+    industry: Optional[str] = None          # restaurant, hotel, real_estate, other
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    is_active: bool = True
 
-    name = Column(String(255), nullable=False)
-    industry = Column(String(100))
-    website = Column(String(500))
-    phone = Column(String(20))
-    email = Column(String(255))
-    is_active = Column(Boolean, default=True)
+    # Onboarding
+    business_hours: Optional[str] = None          # e.g., "Mon-Sat 9AM-10PM"
+    services_offered: Optional[str] = None        # description of services/products
+    capture_fields: dict = Field(default_factory=dict)  # {"guest_count": true, ...}
+    onboarding_complete: bool = False
+    welcome_message: Optional[str] = None         # custom greeting for customers
 
-    # WhatsApp / Telegram config
-    whatsapp_number = Column(String(20))
-    telegram_chat_id = Column(String(50))
+    # Telegram config
+    telegram_bot_username: Optional[str] = None
+    telegram_chat_id: Optional[str] = None        # owner's chat ID for notifications
+    deep_link_code: Optional[Indexed(str, unique=True)] = None  # t.me/bot?start=CODE
 
-    # Relationships
-    leads = relationship("Lead", back_populates="business", lazy="selectin")
-    users = relationship("User", back_populates="business", lazy="selectin")
+    class Settings:
+        name = "businesses"

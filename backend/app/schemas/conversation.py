@@ -1,7 +1,6 @@
 """Conversation & Message schemas."""
 
 from datetime import datetime
-from uuid import UUID
 from pydantic import BaseModel
 from typing import Any
 
@@ -10,24 +9,24 @@ class MessageCreate(BaseModel):
     role: str
     content: str
     channel: str
-    metadata_: dict[str, Any] = {}
+    msg_metadata: dict[str, Any] = {}
 
 
 class MessageResponse(BaseModel):
-    id: UUID
-    conversation_id: UUID
+    id: str
+    conversation_id: str
     role: str
     content: str
     channel: str
-    metadata_: dict[str, Any]
+    msg_metadata: dict[str, Any]
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
 
 class ConversationResponse(BaseModel):
-    id: UUID
-    lead_id: UUID
+    id: str
+    lead_id: str
     channel: str
     intent: str | None
     sentiment: float

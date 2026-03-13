@@ -3,12 +3,17 @@
 from typing import Any
 
 
-def parse_whatsapp_message(payload: dict) -> dict[str, Any]:
+def parse_telegram_message(payload: dict) -> dict[str, Any]:
     return {
-        "source": "whatsapp",
-        "customer_phone": payload.get("from_number"),
+        "source": "telegram",
+        "customer_name": payload.get("from_username") or payload.get("from_name"),
+        "customer_phone": None,
+        "customer_email": None,
         "message": payload.get("text", ""),
-        "details": {},
+        "details": {
+            "telegram_chat_id": payload.get("chat_id"),
+            "telegram_username": payload.get("from_username"),
+        },
     }
 
 

@@ -4,23 +4,6 @@ from pydantic import BaseModel
 from typing import Any
 
 
-# ── WhatsApp Webhook ──
-class WhatsAppMessage(BaseModel):
-    from_number: str = ""
-    message_id: str = ""
-    timestamp: str = ""
-    type: str = "text"
-    text: str = ""
-    # For interactive replies (button clicks)
-    button_reply_id: str | None = None
-    button_reply_title: str | None = None
-
-
-class WhatsAppWebhookPayload(BaseModel):
-    object: str = ""
-    entry: list[dict[str, Any]] = []
-
-
 # ── Instagram Webhook ──
 class InstagramMessage(BaseModel):
     sender_id: str = ""
@@ -38,7 +21,10 @@ class TelegramMessage(BaseModel):
     chat_id: int = 0
     text: str = ""
     from_username: str = ""
+    from_name: str = ""
     message_id: int = 0
+    callback_data: str | None = None
+    callback_query_id: str | None = None
 
 
 class TelegramWebhookPayload(BaseModel):

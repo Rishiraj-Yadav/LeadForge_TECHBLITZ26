@@ -72,49 +72,49 @@ def route_after_conversation(state: AgentState) -> str:
 def build_graph():
     graph = StateGraph(AgentState)
 
-    graph.add_node("intake", intake_node)
-    graph.add_node("research", research_node)
-    graph.add_node("scoring", scoring_node)
-    graph.add_node("notification", notification_node)
-    graph.add_node("outreach", outreach_node)
-    graph.add_node("conversation", conversation_node)
-    graph.add_node("followup", followup_node)
-    graph.add_node("voice", voice_node)
-    graph.add_node("pipeline", pipeline_node)
-    graph.add_node("wait_approval", lambda state: state)
+    graph.add_node("agent_intake", intake_node)
+    graph.add_node("agent_research", research_node)
+    graph.add_node("agent_scoring", scoring_node)
+    graph.add_node("agent_notification", notification_node)
+    graph.add_node("agent_outreach", outreach_node)
+    graph.add_node("agent_conversation", conversation_node)
+    graph.add_node("agent_followup", followup_node)
+    graph.add_node("agent_voice", voice_node)
+    graph.add_node("agent_pipeline", pipeline_node)
+    graph.add_node("agent_wait_approval", lambda state: state)
 
-    graph.set_entry_point("intake")
+    graph.set_entry_point("agent_intake")
 
-    graph.add_edge("intake", "research")
-    graph.add_edge("research", "scoring")
-    graph.add_edge("scoring", "notification")
+    graph.add_edge("agent_intake", "agent_research")
+    graph.add_edge("agent_research", "agent_scoring")
+    graph.add_edge("agent_scoring", "agent_notification")
 
     graph.add_conditional_edges(
-        "notification",
+        "agent_notification",
         route_after_notification,
         {
-            "outreach": "outreach",
-            "pipeline": "pipeline",
-            "wait_approval": "wait_approval",
+            "outreach": "agent_outreach",
+            "pipeline": "agent_pipeline",
+            "wait_approval": "agent_wait_approval",
         },
     )
 
-    graph.add_edge("outreach", "conversation")
+    graph.add_edge("agent_outreach", "agent_conversation")
 
     graph.add_conditional_edges(
-        "conversation",
+        "agent_conversation",
         route_after_conversation,
         {
-            "followup": "followup",
-            "voice": "voice",
-            "pipeline": "pipeline",
+            "followup": "agent_followup",
+            "voice": "agent_voice",
+            "pipeline": "agent_pipeline",
         },
     )
 
-    graph.add_edge("followup", "pipeline")
-    graph.add_edge("voice", "pipeline")
-    graph.add_edge("pipeline", END)
-    graph.add_edge("wait_approval", END)
+    graph.add_edge("agent_followup", "agent_pipeline")
+    graph.add_edge("agent_voice", "agent_pipeline")
+    graph.add_edge("agent_pipeline", END)
+    graph.add_edge("agent_wait_approval", END)
 
     return graph.compile()
 
