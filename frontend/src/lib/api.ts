@@ -26,3 +26,5 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
   // Not all endpoints return JSON (e.g., 204 No Content), but standardizing for LeadForge
   return response.json();
 }
+
+export const fetchJson = fetchApi;

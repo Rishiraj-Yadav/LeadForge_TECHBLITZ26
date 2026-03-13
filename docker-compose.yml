@@ -3,14 +3,14 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8005:8005"
+      - "8000:8000"
     env_file:
       - ./backend/.env
     depends_on:
       - redis
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8005 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   redis:
     image: redis:7-alpine

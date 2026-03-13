@@ -7,6 +7,8 @@ __pycache__/
 env/
 venv/
 .venv/
+venv_old
+.venv_old
 *.egg-info/
 dist/
 build/
@@ -48,3 +50,6 @@ htmlcov/
 
 # Build
 *.pyc
+
+
+read_pdf.py

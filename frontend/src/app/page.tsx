@@ -13,7 +13,7 @@ export default function LandingPage() {
   useEffect(() => {
     // Generate initial flat-ish graph
     setGraphData(Array.from({ length: 20 }, () => 30 + Math.random() * 20));
-    
+
     // Ticking Stats
     const statsInterval = setInterval(() => {
       setLeadsProcessed((prev) => prev + Math.floor(Math.random() * 3));
@@ -78,7 +78,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <main className="relative px-6 pt-32 pb-24 lg:pt-40 lg:pb-32">
         <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-16 items-center">
-          
+
           {/* Left: Copy & CTA */}
           <div className="relative z-10 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 rounded-full border border-pine/30 bg-pine/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-pine mb-8 shadow-sm">
@@ -88,17 +88,17 @@ export default function LandingPage() {
               </span>
               Meet your new AI Sales Agent
             </div>
-            
+
             <h1 className="font-display text-5xl font-bold leading-[1.1] tracking-tight text-ink md:text-6xl lg:text-7xl">
-              Never lose a lead <br/>
+              Never lose a lead <br />
               <span className="text-pine bg-clip-text">to slow replies.</span>
             </h1>
-            
+
             <p className="mt-6 text-lg text-ink/70 md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              Capture, qualify, and close deals autonomously across WhatsApp, Instagram, Email, and Voice. 
+              Capture, qualify, and close deals autonomously across WhatsApp, Instagram, Email, and Voice.
               The intelligent AI CRM that literally works 24/7.
             </p>
-            
+
             <div className="mt-10 flex flex-col items-center justify-center lg:justify-start gap-4 sm:flex-row">
               <Link href="/onboarding" className="group flex items-center gap-2 rounded-2xl bg-pine px-8 py-4 text-lg font-bold text-white shadow-xl shadow-pine/20 transition-all hover:-translate-y-1 hover:shadow-pine/30">
                 Deploy Agent Now
@@ -106,7 +106,7 @@ export default function LandingPage() {
               </Link>
               <span className="text-sm font-semibold text-ink/50 px-4">No credit card required.</span>
             </div>
-            
+
             {/* Trust Badges */}
             <div className="mt-12 flex items-center justify-center lg:justify-start gap-6 opacity-60 grayscale">
               <div className="text-sm font-bold tracking-widest uppercase">Meta</div>
@@ -123,7 +123,7 @@ export default function LandingPage() {
 
             <div className="relative rounded-3xl border border-white/40 bg-white/40 p-2 shadow-2xl backdrop-blur-xl rotate-1 lg:rotate-2 hover:rotate-0 transition-all duration-700 ease-out">
               <div className="rounded-2xl bg-white shadow-inner overflow-hidden border border-ink/5">
-                
+
                 {/* Mock Header */}
                 <div className="flex items-center justify-between border-b border-ink/5 bg-mist/30 px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -199,21 +199,19 @@ export default function LandingPage() {
                     <div className="absolute top-2 left-4 text-[10px] text-mist/30 font-bold uppercase tracking-widest">Agent Logic Stream</div>
                     {/* Ghost lines for styling */}
                     <div className="absolute left-4 top-8 bottom-0 w-px bg-white/10" />
-                    
+
                     <div className="space-y-2 z-10 w-full">
                       {activeChat.map((msg, i) => (
-                        <div 
-                          key={msg.id} 
+                        <div
+                          key={msg.id}
                           className="flex items-start gap-3 animate-[pulse_0.5s_ease-out]"
                         >
-                          <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${
-                            msg.type === 'agent' ? 'bg-blue-400' : 
+                          <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${msg.type === 'agent' ? 'bg-blue-400' :
                             msg.type === 'success' ? 'bg-pine' : 'bg-mist/50'
-                          }`} />
-                          <span className={`leading-tight ${
-                            msg.type === 'success' ? 'text-pine font-bold' :
+                            }`} />
+                          <span className={`leading-tight ${msg.type === 'success' ? 'text-pine font-bold' :
                             msg.type === 'agent' ? 'text-blue-300' : 'text-mist/70'
-                          }`}>
+                            }`}>
                             {msg.text}
                           </span>
                         </div>
@@ -231,8 +229,8 @@ export default function LandingPage() {
         <div className="mx-auto mt-32 max-w-7xl">
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 overflow-hidden rounded-3xl relative h-[400px] card border border-ink/5 group">
-              <img 
-                src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1600" 
+              <img
+                src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1600"
                 alt="AI Neural Network Abstraction"
                 className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105"
               />
@@ -243,9 +241,9 @@ export default function LandingPage() {
                 <p className="mt-4 text-base text-ink/70 font-medium leading-relaxed">Under the hood, LangGraph perfectly orchestrates Intake, Research, Scoring, Outreach, and Voice agents in real-time. They hand off context seamlessly to close your leads like a senior account executive.</p>
               </div>
             </div>
-            
+
             <div className="overflow-hidden rounded-3xl relative h-[400px] card border border-ink/5 group bg-ink text-white shadow-2xl">
-              <img 
+              <img
                 src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
                 alt="Lead Scoring Dashboard"
                 className="absolute inset-0 h-full w-full object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105 mix-blend-overlay"
@@ -295,7 +293,7 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
-      
+
       {/* Footer CTA */}
       <footer className="bg-ink text-center py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=1600')] opacity-5 mix-blend-overlay bg-cover bg-center" />

@@ -1,0 +1,235 @@
+﻿Requirement already satisfied: fastapi==0.115.6 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 2)) (0.115.6)
+Requirement already satisfied: uvicorn[standard]==0.34.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 3)) (0.34.0)
+Requirement already satisfied: python-dotenv==1.0.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 4)) (1.0.1)
+Requirement already satisfied: pydantic==2.10.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 5)) (2.10.4)
+Requirement already satisfied: pydantic-settings==2.7.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 6)) (2.7.1)
+Collecting langgraph==0.2.60
+  Using cached langgraph-0.2.60-py3-none-any.whl (135 kB)
+Collecting langchain==0.3.14
+  Using cached langchain-0.3.14-py3-none-any.whl (1.0 MB)
+Collecting langchain-google-genai==2.0.8
+  Using cached langchain_google_genai-2.0.8-py3-none-any.whl (41 kB)
+Collecting langchain-community==0.3.14
+  Using cached langchain_community-0.3.14-py3-none-any.whl (2.5 MB)
+Collecting google-generativeai==0.8.4
+  Using cached google_generativeai-0.8.4-py3-none-any.whl (175 kB)
+Requirement already satisfied: motor==3.6.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 16)) (3.6.0)
+Collecting beanie==1.27.0
+  Using cached beanie-1.27.0-py3-none-any.whl (84 kB)
+Requirement already satisfied: redis==5.2.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 20)) (5.2.1)
+Requirement already satisfied: pinecone-client==5.0.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 23)) (5.0.1)
+Requirement already satisfied: httpx==0.28.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 26)) (0.28.1)
+Requirement already satisfied: aiohttp==3.11.11 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 27)) (3.11.11)
+Requirement already satisfied: sendgrid==6.11.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 28)) (6.11.0)
+Collecting twilio==9.4.0
+  Using cached twilio-9.4.0-py2.py3-none-any.whl (1.9 MB)
+Collecting deepgram-sdk==3.8.0
+  Using cached deepgram_sdk-3.8.0-py3-none-any.whl (129 kB)
+Collecting elevenlabs==2.39.0
+  Using cached elevenlabs-2.39.0-py3-none-any.whl (1.4 MB)
+Requirement already satisfied: phonenumbers==8.13.52 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 35)) (8.13.52)
+Requirement already satisfied: python-dateutil==2.9.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 36)) (2.9.0)
+Requirement already satisfied: python-multipart==0.0.19 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 37)) (0.0.19)
+Requirement already satisfied: beautifulsoup4==4.12.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 38)) (4.12.3)
+Requirement already satisfied: Jinja2==3.1.5 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 39)) (3.1.5)
+Requirement already satisfied: email-validator==2.2.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 40)) (2.2.0)
+Requirement already satisfied: qrcode==8.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 41)) (8.0)
+Collecting python-socketio==5.12.1
+  Using cached python_socketio-5.12.1-py3-none-any.whl (76 kB)
+Requirement already satisfied: pytest==8.3.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 47)) (8.3.4)
+Requirement already satisfied: pytest-asyncio==0.24.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 48)) (0.24.0)
+Requirement already satisfied: pytest-cov==6.0.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 49)) (6.0.0)
+Requirement already satisfied: python-jose[cryptography]==3.3.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 52)) (3.3.0)
+Requirement already satisfied: passlib[bcrypt]==1.7.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from -r requirements.txt (line 53)) (1.7.4)
+Requirement already satisfied: starlette<0.42.0,>=0.40.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from fastapi==0.115.6->-r requirements.txt (line 2)) (0.41.3)
+Requirement already satisfied: typing-extensions>=4.8.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from fastapi==0.115.6->-r requirements.txt (line 2)) (4.15.0)
+Requirement already satisfied: click>=7.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (8.3.1)
+Requirement already satisfied: h11>=0.8 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (0.16.0)
+Requirement already satisfied: colorama>=0.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (0.4.6)
+Requirement already satisfied: httptools>=0.6.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (0.7.1)
+Requirement already satisfied: pyyaml>=5.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (6.0.3)
+Requirement already satisfied: watchfiles>=0.13 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (1.1.1)
+Requirement already satisfied: websockets>=10.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)) (13.1)
+Requirement already satisfied: annotated-types>=0.6.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pydantic==2.10.4->-r requirements.txt (line 5)) (0.7.0)
+Requirement already satisfied: pydantic-core==2.27.2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pydantic==2.10.4->-r requirements.txt (line 5)) (2.27.2)
+Collecting langchain-core!=0.3.0,!=0.3.1,!=0.3.10,!=0.3.11,!=0.3.12,!=0.3.13,!=0.3.14,!=0.3.15,!=0.3.16,!=0.3.17,!=0.3.18,!=0.3.19,!=0.3.2,!=0.3.20,!=0.3.21,!=0.3.22,!=0.3.3,!=0.3.4,!=0.3.5,!=0.3.6,!=0.3.7,!=0.3.8,!=0.3.9,<0.4.0,>=0.2.43
+  Using cached langchain_core-0.3.83-py3-none-any.whl (458 kB)
+Collecting langgraph-checkpoint<3.0.0,>=2.0.4
+  Using cached langgraph_checkpoint-2.1.2-py3-none-any.whl (45 kB)
+Requirement already satisfied: langgraph-sdk<0.2.0,>=0.1.42 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langgraph==0.2.60->-r requirements.txt (line 9)) (0.1.74)
+Requirement already satisfied: SQLAlchemy<3,>=1.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain==0.3.14->-r requirements.txt (line 10)) (2.0.48)
+Collecting langchain-text-splitters<0.4.0,>=0.3.3
+  Using cached langchain_text_splitters-0.3.11-py3-none-any.whl (33 kB)
+Requirement already satisfied: langsmith<0.3,>=0.1.17 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain==0.3.14->-r requirements.txt (line 10)) (0.2.11)
+Requirement already satisfied: numpy<2,>=1.22.4 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain==0.3.14->-r requirements.txt (line 10)) (1.26.4)
+Requirement already satisfied: requests<3,>=2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain==0.3.14->-r requirements.txt (line 10)) (2.32.5)
+Requirement already satisfied: tenacity!=8.4.0,<10,>=8.1.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain==0.3.14->-r requirements.txt (line 10)) (9.1.4)
+Requirement already satisfied: filetype<2.0.0,>=1.2.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain-google-genai==2.0.8->-r requirements.txt (line 11)) (1.2.0)
+Requirement already satisfied: dataclasses-json<0.7,>=0.5.7 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain-community==0.3.14->-r requirements.txt (line 12)) (0.6.7)
+Requirement already satisfied: httpx-sse<0.5.0,>=0.4.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain-community==0.3.14->-r requirements.txt (line 12)) (0.4.3)
+Collecting google-ai-generativelanguage==0.6.15
+  Using cached google_ai_generativelanguage-0.6.15-py3-none-any.whl (1.3 MB)
+Collecting google-api-core
+  Using cached google_api_core-2.30.0-py3-none-any.whl (173 kB)
+Collecting google-api-python-client
+  Using cached google_api_python_client-2.192.0-py3-none-any.whl (14.8 MB)
+Requirement already satisfied: google-auth>=2.15.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-generativeai==0.8.4->-r requirements.txt (line 13)) (2.49.1)
+Requirement already satisfied: protobuf in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-generativeai==0.8.4->-r requirements.txt (line 13)) (5.29.6)
+Requirement already satisfied: tqdm in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-generativeai==0.8.4->-r requirements.txt (line 13)) (4.67.3)
+Requirement already satisfied: pymongo<4.10,>=4.9 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from motor==3.6.0->-r requirements.txt (line 16)) (4.9.2)
+Requirement already satisfied: toml in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from beanie==1.27.0->-r requirements.txt (line 17)) (0.10.2)
+Requirement already satisfied: lazy-model==0.2.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from beanie==1.27.0->-r requirements.txt (line 17)) (0.2.0)
+Requirement already satisfied: async-timeout>=4.0.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from redis==5.2.1->-r requirements.txt (line 20)) (5.0.1)
+Requirement already satisfied: certifi>=2019.11.17 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pinecone-client==5.0.1->-r requirements.txt (line 23)) (2026.2.25)
+Requirement already satisfied: pinecone-plugin-inference<2.0.0,>=1.0.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pinecone-client==5.0.1->-r requirements.txt (line 23)) (1.1.0)
+Requirement already satisfied: pinecone-plugin-interface<0.0.8,>=0.0.7 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pinecone-client==5.0.1->-r requirements.txt (line 23)) (0.0.7)
+Requirement already satisfied: urllib3>=1.26.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pinecone-client==5.0.1->-r requirements.txt (line 23)) (2.6.3)
+Requirement already satisfied: anyio in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from httpx==0.28.1->-r requirements.txt (line 26)) (4.12.1)
+Requirement already satisfied: httpcore==1.* in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from httpx==0.28.1->-r requirements.txt (line 26)) (1.0.9)
+Requirement already satisfied: idna in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from httpx==0.28.1->-r requirements.txt (line 26)) (3.11)
+Requirement already satisfied: aiohappyeyeballs>=2.3.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (2.6.1)
+Requirement already satisfied: aiosignal>=1.1.2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (25.4.0)
+Requirement already satisfied: frozenlist>=1.1.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (0.4.1)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from aiohttp==3.11.11->-r requirements.txt (line 27)) (1.23.0)
+Requirement already satisfied: python-http-client>=3.2.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from sendgrid==6.11.0->-r requirements.txt (line 28)) (3.3.7)
+Requirement already satisfied: starkbank-ecdsa>=2.0.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from sendgrid==6.11.0->-r requirements.txt (line 28)) (2.2.0)
+Requirement already satisfied: PyJWT<3.0.0,>=2.0.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from twilio==9.4.0->-r requirements.txt (line 29)) (2.12.0)
+Collecting aiohttp-retry==2.8.3
+  Using cached aiohttp_retry-2.8.3-py3-none-any.whl (9.8 kB)
+Requirement already satisfied: aiofiles>=23.2.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from deepgram-sdk==3.8.0->-r requirements.txt (line 30)) (25.1.0)
+Requirement already satisfied: aenum>=3.1.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from deepgram-sdk==3.8.0->-r requirements.txt (line 30)) (3.1.16)
+Requirement already satisfied: deprecation>=2.1.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from deepgram-sdk==3.8.0->-r requirements.txt (line 30)) (2.1.0)
+Requirement already satisfied: six>=1.5 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-dateutil==2.9.0->-r requirements.txt (line 36)) (1.17.0)
+Requirement already satisfied: soupsieve>1.2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from beautifulsoup4==4.12.3->-r requirements.txt (line 38)) (2.8.3)
+Requirement already satisfied: MarkupSafe>=2.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from Jinja2==3.1.5->-r requirements.txt (line 39)) (3.0.3)
+Requirement already satisfied: dnspython>=2.0.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from email-validator==2.2.0->-r requirements.txt (line 40)) (2.8.0)
+Requirement already satisfied: bidict>=0.21.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-socketio==5.12.1->-r requirements.txt (line 44)) (0.23.1)
+Requirement already satisfied: python-engineio>=4.11.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-socketio==5.12.1->-r requirements.txt (line 44)) (4.13.1)
+Requirement already satisfied: iniconfig in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pytest==8.3.4->-r requirements.txt (line 47)) (2.3.0)
+Requirement already satisfied: packaging in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pytest==8.3.4->-r requirements.txt (line 47)) (24.2)
+Requirement already satisfied: pluggy<2,>=1.5 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pytest==8.3.4->-r requirements.txt (line 47)) (1.6.0)
+Requirement already satisfied: coverage[toml]>=7.5 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from pytest-cov==6.0.0->-r requirements.txt (line 49)) (7.13.4)
+Requirement already satisfied: ecdsa!=0.15 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (0.19.1)
+Requirement already satisfied: rsa in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (4.9.1)
+Requirement already satisfied: pyasn1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (0.6.2)
+Requirement already satisfied: cryptography>=3.4.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (46.0.5)
+Requirement already satisfied: bcrypt>=3.1.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from passlib[bcrypt]==1.7.4->-r requirements.txt (line 53)) (5.0.0)
+Requirement already satisfied: proto-plus<2.0.0dev,>=1.22.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-ai-generativelanguage==0.6.15->google-generativeai==0.8.4->-r requirements.txt (line 13)) (1.27.1)
+Requirement already satisfied: cffi>=2.0.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from cryptography>=3.4.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (2.0.0)
+Requirement already satisfied: marshmallow<4.0.0,>=3.18.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from dataclasses-json<0.7,>=0.5.7->langchain-community==0.3.14->-r requirements.txt (line 12)) (3.26.2)
+Requirement already satisfied: typing-inspect<1,>=0.4.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from dataclasses-json<0.7,>=0.5.7->langchain-community==0.3.14->-r requirements.txt (line 12)) (0.9.0)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-auth>=2.15.0->google-generativeai==0.8.4->-r requirements.txt (line 13)) (0.4.2)
+Collecting langchain-core!=0.3.0,!=0.3.1,!=0.3.10,!=0.3.11,!=0.3.12,!=0.3.13,!=0.3.14,!=0.3.15,!=0.3.16,!=0.3.17,!=0.3.18,!=0.3.19,!=0.3.2,!=0.3.20,!=0.3.21,!=0.3.22,!=0.3.3,!=0.3.4,!=0.3.5,!=0.3.6,!=0.3.7,!=0.3.8,!=0.3.9,<0.4.0,>=0.2.43
+  Using cached langchain_core-0.3.82-py3-none-any.whl (457 kB)
+  Using cached langchain_core-0.3.81-py3-none-any.whl (457 kB)
+  Using cached langchain_core-0.3.80-py3-none-any.whl (450 kB)
+  Using cached langchain_core-0.3.79-py3-none-any.whl (449 kB)
+  Using cached langchain_core-0.3.78-py3-none-any.whl (449 kB)
+  Using cached langchain_core-0.3.77-py3-none-any.whl (449 kB)
+  Using cached langchain_core-0.3.76-py3-none-any.whl (447 kB)
+  Using cached langchain_core-0.3.75-py3-none-any.whl (443 kB)
+  Using cached langchain_core-0.3.74-py3-none-any.whl (443 kB)
+  Using cached langchain_core-0.3.73-py3-none-any.whl (443 kB)
+  Using cached langchain_core-0.3.72-py3-none-any.whl (442 kB)
+  Using cached langchain_core-0.3.71-py3-none-any.whl (442 kB)
+  Using cached langchain_core-0.3.70-py3-none-any.whl (442 kB)
+  Using cached langchain_core-0.3.69-py3-none-any.whl (441 kB)
+  Using cached langchain_core-0.3.68-py3-none-any.whl (441 kB)
+  Using cached langchain_core-0.3.67-py3-none-any.whl (440 kB)
+  Using cached langchain_core-0.3.66-py3-none-any.whl (438 kB)
+  Using cached langchain_core-0.3.65-py3-none-any.whl (438 kB)
+  Using cached langchain_core-0.3.64-py3-none-any.whl (438 kB)
+  Using cached langchain_core-0.3.63-py3-none-any.whl (438 kB)
+Requirement already satisfied: jsonpatch<2.0,>=1.33 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langchain-core!=0.3.0,!=0.3.1,!=0.3.10,!=0.3.11,!=0.3.12,!=0.3.13,!=0.3.14,!=0.3.15,!=0.3.16,!=0.3.17,!=0.3.18,!=0.3.19,!=0.3.2,!=0.3.20,!=0.3.21,!=0.3.22,!=0.3.3,!=0.3.4,!=0.3.5,!=0.3.6,!=0.3.7,!=0.3.8,!=0.3.9,<0.4.0,>=0.2.43->langgraph==0.2.60->-r requirements.txt (line 9)) (1.33)
+INFO: pip is looking at multiple versions of langchain-text-splitters to determine which version is compatible with other requirements. This could take a while.
+Collecting langchain-text-splitters<0.4.0,>=0.3.3
+  Using cached langchain_text_splitters-0.3.10-py3-none-any.whl (34 kB)
+Requirement already satisfied: orjson<4.0.0,>=3.9.14 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langsmith<0.3,>=0.1.17->langchain==0.3.14->-r requirements.txt (line 10)) (3.11.7)
+Requirement already satisfied: requests-toolbelt<2.0.0,>=1.0.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langsmith<0.3,>=0.1.17->langchain==0.3.14->-r requirements.txt (line 10)) (1.0.0)
+Collecting pip>=25.2
+  Using cached pip-26.0.1-py3-none-any.whl (1.8 MB)
+Collecting langchain-text-splitters<0.4.0,>=0.3.3
+  Using cached langchain_text_splitters-0.3.9-py3-none-any.whl (33 kB)
+  Using cached langchain_text_splitters-0.3.8-py3-none-any.whl (32 kB)
+Requirement already satisfied: ormsgpack>=1.10.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from langgraph-checkpoint<3.0.0,>=2.0.4->langgraph==0.2.60->-r requirements.txt (line 9)) (1.12.2)
+Requirement already satisfied: simple-websocket>=0.10.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from python-engineio>=4.11.0->python-socketio==5.12.1->-r requirements.txt (line 44)) (1.1.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from requests<3,>=2->langchain==0.3.14->-r requirements.txt (line 10)) (3.4.5)
+Requirement already satisfied: greenlet>=1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from SQLAlchemy<3,>=1.4->langchain==0.3.14->-r requirements.txt (line 10)) (3.3.2)
+Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.56.3 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-api-core->google-generativeai==0.8.4->-r requirements.txt (line 13)) (1.73.0)
+Requirement already satisfied: httplib2<1.0.0,>=0.19.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-api-python-client->google-generativeai==0.8.4->-r requirements.txt (line 13)) (0.31.2)
+Collecting google-auth-httplib2<1.0.0,>=0.2.0
+  Using cached google_auth_httplib2-0.3.0-py3-none-any.whl (9.5 kB)
+Requirement already satisfied: uritemplate<5,>=3.0.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-api-python-client->google-generativeai==0.8.4->-r requirements.txt (line 13)) (4.2.0)
+Requirement already satisfied: pycparser in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 52)) (3.0)
+Requirement already satisfied: grpcio<2.0.0,>=1.33.2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-api-core->google-generativeai==0.8.4->-r requirements.txt (line 13)) (1.78.0)
+Requirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from google-api-core->google-generativeai==0.8.4->-r requirements.txt (line 13)) (1.71.2)
+Requirement already satisfied: pyparsing<4,>=3.1 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from httplib2<1.0.0,>=0.19.0->google-api-python-client->google-generativeai==0.8.4->-r requirements.txt (line 13)) (3.3.2)
+Requirement already satisfied: jsonpointer>=1.9 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from jsonpatch<2.0,>=1.33->langchain-core!=0.3.0,!=0.3.1,!=0.3.10,!=0.3.11,!=0.3.12,!=0.3.13,!=0.3.14,!=0.3.15,!=0.3.16,!=0.3.17,!=0.3.18,!=0.3.19,!=0.3.2,!=0.3.20,!=0.3.21,!=0.3.22,!=0.3.3,!=0.3.4,!=0.3.5,!=0.3.6,!=0.3.7,!=0.3.8,!=0.3.9,<0.4.0,>=0.2.43->langgraph==0.2.60->-r requirements.txt (line 9)) (3.0.0)
+Requirement already satisfied: wsproto in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from simple-websocket>=0.10.0->python-engineio>=4.11.0->python-socketio==5.12.1->-r requirements.txt (line 44)) (1.3.2)
+Requirement already satisfied: mypy-extensions>=0.3.0 in c:\users\visha\desktop\techblitz\techblitz26_yadav-s\backend\venv\lib\site-packages (from typing-inspect<1,>=0.4.0->dataclasses-json<0.7,>=0.5.7->langchain-community==0.3.14->-r requirements.txt (line 12)) (1.1.0)
+.\venv\Scripts\pip.exe : 
+WARNING: The candidate 
+selected for download or 
+install is a yanked version: 
+'twilio' candidate (version 
+9.4.0 at https://files.python
+hosted.org/packages/3a/71/585
+e2c4d10eb92fb17c18b3735311468
+08461ae6555058efe98500359507/
+twilio-9.4.0-py2.py3-none-any
+.whl (from https://pypi.org/s
+imple/twilio/) 
+(requires-python:>=3.7.0))
+At line:1 char:1
++ .\venv\Scripts\pip.exe 
+install -r requirements.txt 
+> pip_out.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (WARNING  
+  : The ca...ython:>=3.7.0   
+ )):String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+Reason for being yanked: 
+<none given>
+Installing collected packages: elevenlabs, deepgram-sdk, aiohttp-retry, twilio, python-socketio, langchain-core, google-auth-httplib2, google-api-core, beanie, langgraph-checkpoint, langchain-text-splitters, google-api-python-client, langgraph, langchain, google-ai-generativelanguage, langchain-community, google-generativeai, langchain-google-genai
+ERROR: Could not install 
+packages due to an OSError: 
+[Errno 2] No such file or 
+directory: 'C:\\Users\\Visha\
+\Desktop\\Techblitz\\TECHBLIT
+Z26_YADAV-S\\backend\\venv\\L
+ib\\site-packages\\elevenlabs
+\\pronunciation_dictionaries\
+\rules\\types\\body_set_rules
+_on_the_pronunciation_diction
+ary_v_1_pronunciation_diction
+aries_pronunciation_dictionar
+y_id_set_rules_post_rules_ite
+m.py'
+HINT: This error might have 
+occurred since this system 
+does not have Windows Long 
+Path support enabled. You 
+can find information on how 
+to enable this at https://pip
+.pypa.io/warnings/enable-long
+-paths
+
+
+[notice] A new release of 
+pip available: 22.3.1 -> 
+26.0.1
+[notice] To update, run: C:\U
+sers\Visha\Desktop\Techblitz\
+TECHBLITZ26_YADAV-S\backend\v
+env\Scripts\python.exe -m 
+pip install --upgrade pip

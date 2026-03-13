@@ -29,7 +29,7 @@ sendgrid==6.11.0
 twilio==9.4.0
 deepgram-sdk==3.8.0
 # 1.16.0 is not available for Python 3.13. 2.39.0 supports current code import path.
-elevenlabs==2.39.0
+elevenlabs==1.50.0
 
 # ── Utilities ──
 phonenumbers==8.13.52
