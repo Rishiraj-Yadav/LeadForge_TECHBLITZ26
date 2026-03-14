@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # ── Serper ──
     SERPER_API_KEY: str = ""
 
+    # ── Lingo.dev (Translation) ──
+    LINGODOTDEV_API_KEY: str = ""
+
     # ── Pinecone ──
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX_NAME: str = "leadforge-conversations"

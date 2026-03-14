@@ -17,6 +17,7 @@ from app.services.telegram.onboarding_wizard import (
     start_onboarding,
     handle_onboarding_reply,
 )
+from app.services.translation import get_translation_service, SUPPORTED_LANGUAGES
 
 router = APIRouter()
 settings = get_settings()
@@ -185,6 +186,51 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
                 await bot.send_message(str(data["chat_id"]), f"Error loading lead: {exc}")
             return {"status": "ok", "scope": "view_chat"}
 
+        # ── Language selection callback (lang:DEEP_LINK_CODE:LOCALE or lang:DEEP_LINK_CODE:LOCALE:n for new enquiry) ──
+        if command.startswith("lang:"):
+            parts = command.split(":")
+            # Support both 3-part (normal) and 4-part (new_enquiry) format
+            if len(parts) >= 3:
+                _, deep_code, locale = parts[0], parts[1], parts[2]
+                is_new_enquiry = len(parts) == 4 and parts[3] == "n"
+                business = await _find_business_by_code(deep_code)
+                if business:
+                    lang_name = SUPPORTED_LANGUAGES.get(locale, locale)
+                    welcome = business.welcome_message or f"Hi! Welcome to {business.name}. How can I help you today?"
+
+                    if is_new_enquiry:
+                        welcome = f"🆕 New enquiry started!\n\n{welcome}"
+
+                    # Translate welcome message
+                    translator = get_translation_service()
+                    if locale != "en":
+                        welcome = await translator.translate_from_english(welcome, locale)
+
+                    await bot.send_message(str(data["chat_id"]), f"🌐 Language: {lang_name}\n\n{welcome}")
+
+                    # Create placeholder lead with language preference
+                    # If this is a new enquiry the old lead was already closed in the /new handler,
+                    # so get_or_create_lead_for_channel will create a fresh lead automatically.
+                    await process_customer_message(
+                        source="telegram",
+                        business_id=str(business.id),
+                        customer_name=data.get("from_name") or data.get("username"),
+                        customer_phone=None,
+                        customer_email=None,
+                        details={
+                            "telegram_chat_id": str(data["chat_id"]),
+                            "telegram_username": data.get("username"),
+                            "deep_link_code": deep_code,
+                            "language": locale,
+                            "is_start": True,
+                            "new_enquiry": is_new_enquiry,
+                        },
+                        message_text="/start",
+                    )
+                    scope = "new_enquiry_lang_select" if is_new_enquiry else "lang_select"
+                    return {"status": "ok", "scope": scope, "locale": locale}
+            return {"status": "ok", "scope": "lang_select", "error": "bad_format"}
+
         return {"status": "ok", "decision": command}
 
     # ── 2. /register — owner starts Telegram onboarding wizard ──
@@ -213,12 +259,7 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
                     await bot.send_message(
                         chat_id,
                         f"Connected! You will now receive lead notifications for {business.name}.\n\n"
-                        f"Commands:\n"
-                        f"today — pipeline summary\n"
-                        f"leads — recent leads\n"
-                        f"approve <id> — approve a lead\n"
-                        f"reject <id> — reject a lead\n"
-                        f"won <id> <amount> — mark as won",
+                        f"Send /help to see all commands.",
                     )
                     return {"status": "ok", "scope": "owner_connect", "business": business.name}
                 await bot.send_message(chat_id, "Invalid code. Please check your onboarding link.")
@@ -227,27 +268,24 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
             # Customer scanning QR / clicking deep link: /start CODE
             business = await _find_business_by_code(code)
             if business:
-                welcome = business.welcome_message or (
-                    f"Hi! Welcome to {business.name} "
-                    f"How can I help you today?"
+                # Show language selection buttons
+                lang_buttons = []
+                row = []
+                for locale, label in SUPPORTED_LANGUAGES.items():
+                    row.append({"text": label, "callback_data": f"lang:{code}:{locale}"})
+                    if len(row) == 2:
+                        lang_buttons.append(row)
+                        row = []
+                if row:
+                    lang_buttons.append(row)
+
+                await bot.send_inline_keyboard(
+                    chat_id,
+                    f"👋 Welcome to {business.name}!\n\n"
+                    f"Please select your preferred language:",
+                    lang_buttons,
                 )
-                await bot.send_message(chat_id, welcome)
-                # Create a placeholder lead so we can route future messages
-                await process_customer_message(
-                    source="telegram",
-                    business_id=str(business.id),
-                    customer_name=data.get("from_name") or data.get("username"),
-                    customer_phone=None,
-                    customer_email=None,
-                    details={
-                        "telegram_chat_id": chat_id,
-                        "telegram_username": data.get("username"),
-                        "deep_link_code": code,
-                        "is_start": True,
-                    },
-                    message_text="/start",
-                )
-                return {"status": "ok", "scope": "customer_start", "business": business.name}
+                return {"status": "ok", "scope": "customer_start", "business": business.name, "step": "lang_select"}
 
             await bot.send_message(chat_id, "Welcome! Please use a valid business link to get started.")
             return {"status": "ok", "scope": "customer_start", "error": "invalid_code"}
@@ -258,6 +296,57 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
             "Welcome to LeadForge! Please use a business-specific link to connect.",
         )
         return {"status": "ok", "scope": "customer_start"}
+
+    # ── 4b. /new — customer starts a fresh enquiry ──
+    if text.startswith("/new"):
+        assoc_business = await _resolve_business_for_customer(chat_id)
+        if assoc_business:
+            # ── Close all existing active leads for this customer ──
+            # This ensures get_or_create_lead_for_channel creates a brand-new lead
+            # when the customer picks a language (since WON/LOST leads are excluded).
+            try:
+                active_leads = await Lead.find(
+                    {
+                        "source": "telegram",
+                        "details.telegram_chat_id": str(chat_id),
+                        "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
+                    }
+                ).to_list()
+                for old_lead in active_leads:
+                    old_lead.stage = LeadStage.LOST
+                    old_details = dict(old_lead.details or {})
+                    old_details["closed_reason"] = "new_enquiry"
+                    old_lead.details = old_details
+                    await old_lead.save()
+                print(f"ℹ️  /new: closed {len(active_leads)} active lead(s) for chat {chat_id}")
+            except Exception as exc:
+                print(f"⚠️  /new: could not close old leads: {exc}")
+
+            # Show language selection with 'n' flag so the callback knows it's a new enquiry
+            code = assoc_business.deep_link_code or ""
+            lang_buttons = []
+            row = []
+            for locale, label in SUPPORTED_LANGUAGES.items():
+                row.append({"text": label, "callback_data": f"lang:{code}:{locale}:n"})
+                if len(row) == 2:
+                    lang_buttons.append(row)
+                    row = []
+            if row:
+                lang_buttons.append(row)
+
+            await bot.send_inline_keyboard(
+                chat_id,
+                f"🆕 Starting a new enquiry with {assoc_business.name}!\n\n"
+                f"Please select your preferred language:",
+                lang_buttons,
+            )
+            return {"status": "ok", "scope": "new_enquiry", "business": assoc_business.name}
+        else:
+            await bot.send_message(
+                chat_id,
+                "No active business found. Please scan a QR code or use a business link first.",
+            )
+            return {"status": "ok", "scope": "new_enquiry", "error": "no_business"}
 
     # ── 3. /connect command (alternative way for owners) ──
     if text.startswith("/connect"):
@@ -284,9 +373,28 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
     if business:
         return await _handle_rep_command(bot, data, business if isinstance(business, Business) else None)
 
-    # ── 5. Regular customer message ──
+    # ── 6. Regular customer message ──
     # Find which business this customer belongs to
     assoc_business = await _resolve_business_for_customer(chat_id)
+
+    # Check if customer has a language preference from their lead
+    customer_lang = "en"
+    existing_lead = None
+    if assoc_business:
+        existing_lead = await Lead.find_one({
+            "source": "telegram",
+            "details.telegram_chat_id": str(chat_id),
+            "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
+        })
+        if existing_lead and existing_lead.details:
+            customer_lang = existing_lead.details.get("language", "en")
+
+    # Translate customer message to English for AI processing
+    message_for_ai = text
+    if customer_lang != "en":
+        translator = get_translation_service()
+        message_for_ai = await translator.translate_to_english(text, customer_lang)
+
     result = await process_customer_message(
         source="telegram",
         business_id=str(assoc_business.id) if assoc_business else None,
@@ -296,9 +404,17 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
         details={
             "telegram_chat_id": chat_id,
             "telegram_username": data.get("username"),
+            "language": customer_lang,
         },
-        message_text=text,
+        message_text=message_for_ai,
     )
+
+    # Translate AI reply back to customer language
+    if customer_lang != "en" and result.get("sent"):
+        # The AI reply was already sent in English via lead_workflow
+        # We need to intercept and translate. For now, send a translated follow-up.
+        pass  # Translation is handled in lead_workflow via details.language
+
     return {
         "status": "ok",
         "scope": "customer",

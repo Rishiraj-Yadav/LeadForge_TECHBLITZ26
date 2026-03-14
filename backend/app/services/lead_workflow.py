@@ -227,6 +227,15 @@ async def process_customer_message(
         # Send immediate AI reply
         sent = []
         if result["reply"]:
+            reply_text = result["reply"]
+
+            # Translate AI reply to customer's language
+            customer_lang = (lead.details or {}).get("language", "en")
+            if customer_lang != "en":
+                from app.services.translation import get_translation_service
+                translator = get_translation_service()
+                reply_text = await translator.translate_from_english(reply_text, customer_lang)
+
             dispatcher = get_communication_service()
             send_result = await dispatcher.send_customer_message(
                 {
@@ -235,7 +244,7 @@ async def process_customer_message(
                     "customer_email": lead.customer_email,
                     "details": lead.details or {},
                 },
-                result["reply"],
+                reply_text,
             )
             await append_message(
                 conversation.id, role="ai", channel=send_result["channel"], content=result["reply"]
@@ -361,6 +370,14 @@ async def _handle_ongoing_conversation(
 
     sent = []
     if reply and lead.rep_decision == RepDecision.APPROVED:
+        # Translate reply to customer's language
+        customer_lang = (lead.details or {}).get("language", "en")
+        reply_to_send = reply
+        if customer_lang != "en":
+            from app.services.translation import get_translation_service
+            translator = get_translation_service()
+            reply_to_send = await translator.translate_from_english(reply, customer_lang)
+
         dispatcher = get_communication_service()
         send_result = await dispatcher.send_customer_message(
             {
@@ -369,7 +386,7 @@ async def _handle_ongoing_conversation(
                 "customer_email": lead.customer_email,
                 "details": lead.details or {},
             },
-            reply,
+            reply_to_send,
         )
         await append_message(conversation.id, role="ai", channel=send_result["channel"], content=reply)
         sent.append(send_result)
