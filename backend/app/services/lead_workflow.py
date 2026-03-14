@@ -68,12 +68,20 @@ async def get_or_create_lead_for_channel(
 ) -> Lead:
     chat_id = details.get("telegram_chat_id")
 
+    # Resolve business_id first so we can use it in the query
+    resolved_biz_id = await resolve_business_id(business_id)
+
     existing = None
     if source == "telegram" and chat_id:
-        # Use raw MongoDB query for nested dict field lookup
+        # Filter by BOTH chat_id AND business_id — this is critical for:
+        # 1. Preventing cross-business contamination (customer A talking to Biz A
+        #    should not bleed into Biz B's lead when they scan Biz B's QR)
+        # 2. Ensuring /new truly creates a fresh lead (old lead is LOST, new query
+        #    finds nothing → new record created)
         existing = await Lead.find_one(
             {
                 "source": "telegram",
+                "business_id": resolved_biz_id,
                 "details.telegram_chat_id": str(chat_id),
                 "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
             }
@@ -88,7 +96,7 @@ async def get_or_create_lead_for_channel(
         return existing
 
     lead = Lead(
-        business_id=await resolve_business_id(business_id),
+        business_id=resolved_biz_id,
         source=source,
         customer_name=customer_name,
         customer_phone=customer_phone,
@@ -98,6 +106,7 @@ async def get_or_create_lead_for_channel(
     )
     await lead.insert()
     return lead
+
 
 
 async def get_or_create_conversation(lead_id: PydanticObjectId, channel: str) -> Conversation:

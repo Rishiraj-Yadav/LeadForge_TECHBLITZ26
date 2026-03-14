@@ -35,19 +35,56 @@ async def _find_business_by_rep_chat(chat_id: str) -> Business | None:
     return await Business.find_one({"telegram_chat_id": str(chat_id)})
 
 
-async def _resolve_business_for_customer(chat_id: str) -> Business | None:
-    """Find the business a customer is associated with via their existing lead."""
-    # Use raw MongoDB query — Beanie has no .not_in() on ExpressionField
-    lead = await Lead.find_one(
-        {
-            "source": "telegram",
-            "details.telegram_chat_id": str(chat_id),
-            "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
-        }
-    )
+async def _resolve_business_for_customer(chat_id: str, business_id=None) -> Business | None:
+    """Find the business a customer is currently active with.
+    If business_id is provided, look for a lead for that specific business.
+    """
+    query: dict = {
+        "source": "telegram",
+        "details.telegram_chat_id": str(chat_id),
+        "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
+    }
+    if business_id:
+        from beanie import PydanticObjectId as _OID
+        try:
+            query["business_id"] = _OID(str(business_id))
+        except Exception:
+            pass
+    lead = await Lead.find_one(query)
     if lead:
         return await Business.get(lead.business_id)
     return None
+
+
+async def _close_active_leads_for_customer(
+    chat_id: str,
+    reason: str = "new_enquiry",
+    exclude_business_id=None,
+) -> int:
+    """Close all active Telegram leads for this customer.
+    If exclude_business_id is set, only close leads that belong to OTHER businesses
+    (used when switching businesses — keeps the new business's lead intact).
+    Returns number of leads closed.
+    """
+    query: dict = {
+        "source": "telegram",
+        "details.telegram_chat_id": str(chat_id),
+        "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
+    }
+    if exclude_business_id:
+        from beanie import PydanticObjectId as _OID
+        try:
+            query["business_id"] = {"$ne": _OID(str(exclude_business_id))}
+        except Exception:
+            pass
+    leads = await Lead.find(query).to_list()
+    for lead in leads:
+        lead.stage = LeadStage.LOST
+        old_details = dict(lead.details or {})
+        old_details["closed_reason"] = reason
+        lead.details = old_details
+        await lead.save()
+    return len(leads)
 
 
 # ── Telegram Webhook ──
@@ -268,6 +305,18 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
             # Customer scanning QR / clicking deep link: /start CODE
             business = await _find_business_by_code(code)
             if business:
+                # ── Close leads from all OTHER businesses for this customer ──
+                # This is the key isolation step: if a customer was chatting with
+                # Business A and now scans Business B's QR, we must not contaminate
+                # Business B's conversation with Business A's lead data.
+                closed = await _close_active_leads_for_customer(
+                    chat_id,
+                    reason="switched_business",
+                    exclude_business_id=business.id,
+                )
+                if closed:
+                    print(f"ℹ️  /start: closed {closed} lead(s) from other businesses for chat {chat_id}")
+
                 # Show language selection buttons
                 lang_buttons = []
                 row = []
@@ -301,28 +350,15 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
     if text.startswith("/new"):
         assoc_business = await _resolve_business_for_customer(chat_id)
         if assoc_business:
-            # ── Close all existing active leads for this customer ──
-            # This ensures get_or_create_lead_for_channel creates a brand-new lead
-            # when the customer picks a language (since WON/LOST leads are excluded).
+            # Close ALL active leads for this customer (same business) so the next
+            # language pick creates a completely fresh lead + conversation.
             try:
-                active_leads = await Lead.find(
-                    {
-                        "source": "telegram",
-                        "details.telegram_chat_id": str(chat_id),
-                        "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
-                    }
-                ).to_list()
-                for old_lead in active_leads:
-                    old_lead.stage = LeadStage.LOST
-                    old_details = dict(old_lead.details or {})
-                    old_details["closed_reason"] = "new_enquiry"
-                    old_lead.details = old_details
-                    await old_lead.save()
-                print(f"ℹ️  /new: closed {len(active_leads)} active lead(s) for chat {chat_id}")
+                closed = await _close_active_leads_for_customer(chat_id, reason="new_enquiry")
+                print(f"ℹ️  /new: closed {closed} active lead(s) for chat {chat_id}")
             except Exception as exc:
                 print(f"⚠️  /new: could not close old leads: {exc}")
 
-            # Show language selection with 'n' flag so the callback knows it's a new enquiry
+            # Show language selection with 'n' flag
             code = assoc_business.deep_link_code or ""
             lang_buttons = []
             row = []
@@ -365,35 +401,43 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
         await bot.send_message(chat_id, "Usage: /connect <your_business_code>")
         return {"status": "ok", "scope": "owner_connect"}
 
-    # ── 4. Check if this is a business owner (rep commands) ──
+    # ── 5. Check if this is a business owner (MUST be before customer routing) ──
+    # This guard prevents owners from accidentally being treated as customers
+    # if they message the bot directly (e.g. typing a question).
     business = await _find_business_by_rep_chat(chat_id)
     if not business and chat_id == settings.REP_TELEGRAM_CHAT_ID:
-        # Fall back to global rep
-        business = True  # sentinel
+        business = True  # sentinel — global rep fallback
     if business:
         return await _handle_rep_command(bot, data, business if isinstance(business, Business) else None)
 
     # ── 6. Regular customer message ──
-    # Find which business this customer belongs to
+    # Find which business this customer's active lead belongs to.
+    # (After business isolation fix, there should be only one active lead per business)
     assoc_business = await _resolve_business_for_customer(chat_id)
 
-    # Check if customer has a language preference from their lead
+    # Read language preference from the customer's active lead for this business
     customer_lang = "en"
-    existing_lead = None
     if assoc_business:
         existing_lead = await Lead.find_one({
             "source": "telegram",
+            "business_id": assoc_business.id,   # ← scoped to the right business
             "details.telegram_chat_id": str(chat_id),
             "stage": {"$nin": [LeadStage.WON.value, LeadStage.LOST.value]},
         })
         if existing_lead and existing_lead.details:
             customer_lang = existing_lead.details.get("language", "en")
 
-    # Translate customer message to English for AI processing
+    # Translate customer message to English for Gemini AI
     message_for_ai = text
-    if customer_lang != "en":
-        translator = get_translation_service()
-        message_for_ai = await translator.translate_to_english(text, customer_lang)
+    if customer_lang != "en" and text:
+        try:
+            translator = get_translation_service()
+            translated = await translator.translate_to_english(text, customer_lang)
+            if translated and translated != text:
+                message_for_ai = translated
+                print(f"🌐 Translated [{customer_lang}→en]: {text!r} → {message_for_ai!r}")
+        except Exception as exc:
+            print(f"⚠️ Translation to English failed: {exc}")
 
     result = await process_customer_message(
         source="telegram",
@@ -408,12 +452,6 @@ async def _handle_telegram_update(bot, data: dict, text: str, chat_id: str):
         },
         message_text=message_for_ai,
     )
-
-    # Translate AI reply back to customer language
-    if customer_lang != "en" and result.get("sent"):
-        # The AI reply was already sent in English via lead_workflow
-        # We need to intercept and translate. For now, send a translated follow-up.
-        pass  # Translation is handled in lead_workflow via details.language
 
     return {
         "status": "ok",
